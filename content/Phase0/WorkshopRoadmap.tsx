@@ -4,27 +4,36 @@ export default function WorkshopRoadmap() {
             <h1>Workshop Roadmap</h1>
 
             <p>
-                You’ve completed Phase 1 — you now understand how Fhenix works and how to get started.
+                You’ve completed Phase 0 — you now understand the problem, the breakthrough, and how Fhenix changes everything.
             </p>
 
             <p>
-                Now let’s move from understanding → building 🚀
+                Now it’s time to move from <b>understanding → building</b> 🚀
             </p>
 
-            <h3>Phase 1 ✅ Completed</h3>
+            <h3>Phase 0 ✅ Completed</h3>
+
+            <ul>
+                <li>🏠 Why privacy matters</li>
+                <li>🕵️ Problems with public blockchains</li>
+                <li>🔐 FHE intuition (locked box)</li>
+                <li>⚡ How Fhenix works</li>
+            </ul>
+
+            <h3>Phase 1: Getting Started ⚡</h3>
+
+            <p>
+                Your first hands-on interaction with Fhenix.
+            </p>
 
             <ul>
                 <li>🛠️ Project setup</li>
                 <li>🔌 Fhenix client setup</li>
-                <li>🔐 Encrypting data</li>
-                <li>⚙️ Basic flow understanding</li>
+                <li>🔐 Encrypt your first value</li>
+                <li>⚙️ Understand the basic flow</li>
             </ul>
 
             <h3>Phase 2: Build & Test Locally 🧪</h3>
-
-            <p>
-                Now you will write your first smart contract using encrypted data.
-            </p>
 
             <ul>
                 <li>📜 Create a contract</li>
@@ -33,27 +42,19 @@ export default function WorkshopRoadmap() {
                 <li>🧪 Test everything locally</li>
             </ul>
 
-            <h3>Phase 3: Deploy to Sepolia 🌐</h3>
-
-            <p>
-                Take your contract live on a testnet.
-            </p>
+            <h3>Phase 3: Deploy to Testnet 🌐</h3>
 
             <ul>
                 <li>🚀 Deploy your contract</li>
-                <li>🔗 Connect to Sepolia network</li>
+                <li>🔗 Connect to Sepolia</li>
                 <li>✅ Verify deployment</li>
             </ul>
 
-            <h3>Phase 4: Frontend + Wallet Integration 💻</h3>
-
-            <p>
-                Build a complete user experience.
-            </p>
+            <h3>Phase 4: Frontend + Wallet 💻</h3>
 
             <ul>
-                <li>🖥️ Create a frontend (Next.js)</li>
-                <li>👛 Connect wallet (e.g. MetaMask)</li>
+                <li>🖥️ Build UI (Next.js)</li>
+                <li>👛 Connect wallet</li>
                 <li>🔁 Send encrypted inputs</li>
                 <li>📦 Read & decrypt results</li>
             </ul>
@@ -73,7 +74,7 @@ export default function WorkshopRoadmap() {
             </p>
 
             <button style={{ marginTop: "10px" }}>
-                Start Phase 2
+                Start Phase 1
             </button>
         </div>
     );

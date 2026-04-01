@@ -4,6 +4,7 @@ import Encryption from "@/content/Phase1/Encryption";
 import HowFHEWorks from "@/content/Phase0/HowFHEWorks";
 import IntroducingFhenix from "@/content/Phase0/IntroducingFhenix";
 import WorkshopRoadmap from "@/content/Phase0/WorkshopRoadmap";
+import Phase1InstallationSetup from "@/content/Phase1/Phase1InstallationSetup";
 
 export const docsConfig = [
     {
@@ -44,12 +45,12 @@ export const docsConfig = [
     },
     {
         phase: "phase-1",
-        title: "Configuring",
+        title: "Setting up your environment",
         items: [
             {
-                slug: "encryption",
-                title: "Encryption",
-                component: Encryption,
+                slug: "environment-construction",
+                title: "Environment Construction",
+                component: Phase1InstallationSetup,
                 rightPanel: ["Encrypt", "Client"]
             }
         ]
