@@ -1,5 +1,13 @@
+import "./globals.css";
+import { SidebarProvider } from "@/components/SidebarContext";
+import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import RightPanel from "@/components/RightPanel";
+
+export const metadata = {
+  title: "Fhenix Docs — Fully Homomorphic Encryption for Blockchain",
+  description:
+    "Developer documentation for Fhenix, the FHE-powered confidential blockchain platform.",
+};
 
 export default function RootLayout({
   children,
@@ -7,24 +15,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
+    <html lang="en">
       <body>
-        <div>
-          <h1>Fhenix Docs</h1>
+        <SidebarProvider>
+          <Header />
+          <Sidebar />
+          <main
+            style={{
+              marginLeft: 272,
+              paddingTop: 60,
+              minHeight: "100vh",
+            }}
+            className="main-content-area"
+          >
+            {children}
+          </main>
 
-          <div style={{ display: "flex" }}>
-
-            {/* LEFT SIDEBAR */}
-            <div style={{ width: "30%" }}>
-              <Sidebar />
-            </div>
-
-            {/* MAIN CONTENT */}
-            <div style={{ width: "70%" }}>
-              {children}
-            </div>
-          </div>
-        </div>
+          <style>{`
+                        @media (max-width: 768px) {
+                            .main-content-area {
+                                margin-left: 0 !important;
+                            }
+                        }
+                    `}</style>
+        </SidebarProvider>
       </body>
     </html>
   );
