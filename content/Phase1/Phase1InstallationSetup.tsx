@@ -1,18 +1,17 @@
+"use client";
+
 import Section from "@/content/ComponentsForCode/Section";
 import RuleList from "@/content/ComponentsForCode/RuleList";
 import CodeBlock from "@/content/ComponentsForCode/CodeBlock";
 import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
+import FeatureCard from "@/content/ComponentsForCode/FeatureCard";
+import { Building, Wrench, BookOpen, Zap } from "lucide-react";
 
 export default function Phase1InstallationSetup() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🚀 Phase 1 — Hardhat + CoFHE TypeScript Setup (Strict Flow)
-            </h1>
-
+        <div style={{ paddingBottom: "40px" }}>
             {/* PREREQUISITE */}
-            <Section title="🧱 0. Prerequisite (MANDATORY)">
+            <Section title="0. Prerequisite (MANDATORY)">
                 <RuleList
                     items={[
                         "Install Node.js LTS (version 22 or higher)",
@@ -21,16 +20,16 @@ export default function Phase1InstallationSetup() {
                     ]}
                 />
 
-                <p className="text-sm text-gray-400 mt-2">
+                <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 12 }}>
                     Hardhat and CoFHE depend on modern Node.js runtime behavior for deterministic execution.
                 </p>
             </Section>
 
             {/* STEP 1 */}
-            <Section title="🧱 1. Initialize Node Project">
+            <Section title="1. Initialize Node Project">
                 <CodeBlock file="terminal" code={`npm init -y`} />
 
-                <p className="text-sm text-gray-400 mt-2">
+                <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 12, marginBottom: 16 }}>
                     Creates the base Node.js project.
                 </p>
 
@@ -41,19 +40,35 @@ export default function Phase1InstallationSetup() {
             </Section>
 
             {/* STEP 2 */}
-            <Section title="📦 2. Install Hardhat + Tooling Dependencies">
+            <Section title="2. Install Hardhat + Tooling Dependencies">
                 <CodeSnippet
                     code={`npm install --save-dev hardhat@^2.22.3 @nomicfoundation/hardhat-toolbox@^6.1.2 typescript@^6.0.2 ts-node@^10.9.2`}
                 />
 
-                <RuleList
-                    items={[
-                        "hardhat → core Ethereum development environment",
-                        "hardhat-toolbox → provides ethers v6, chai, testing utilities",
-                        "typescript → enables typed scripting environment",
-                        "ts-node → runs TypeScript files without manual compilation",
-                    ]}
-                />
+                <div style={{ marginTop: 24, marginBottom: 32, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    {[
+                        { title: "hardhat", desc: "Core Ethereum development environment", icon: <Building size={32} strokeWidth={1.5} />, color: "var(--color-accent)" },
+                        { title: "hardhat-toolbox", desc: "Provides ethers v6, chai, testing utilities", icon: <Wrench size={32} strokeWidth={1.5} />, color: "#60a5fa" },
+                        { title: "typescript", desc: "Enables typed scripting environment", icon: <BookOpen size={32} strokeWidth={1.5} />, color: "#3178c6" },
+                        { title: "ts-node", desc: "Runs TypeScript files without manual compilation", icon: <Zap size={32} strokeWidth={1.5} />, color: "#10b981" }
+                    ].map((tool, idx) => (
+                        <div key={idx} style={{
+                            padding: "20px", background: "var(--color-bg-secondary)",
+                            borderRadius: "16px", border: "1px solid var(--color-border-primary)",
+                            display: "flex", gap: "16px", alignItems: "center",
+                            transition: "all 0.3s ease", cursor: "default"
+                        }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderLeft = `4px solid ${tool.color}`; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderLeft = "1px solid var(--color-border-primary)"; e.currentTarget.style.boxShadow = "none"; }}
+                        >
+                            <div style={{ color: "var(--color-text-secondary)", opacity: 0.8 }}>{tool.icon}</div>
+                            <div>
+                                <h4 style={{ color: "var(--color-text-primary)", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 4px 0" }}>{tool.title}</h4>
+                                <p style={{ color: "var(--color-text-secondary)", fontSize: "14px", margin: 0 }}>{tool.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
                 <CodeSnippet
                     code={`project-root/
@@ -64,50 +79,62 @@ export default function Phase1InstallationSetup() {
             </Section>
 
             {/* STEP 3 */}
-            <Section title="🔐 3. Install CoFHE + Fhenix Dependencies">
-                <CodeSnippet
-                    code={`npm install @cofhe/hardhat-plugin@^0.4.0 @cofhe/sdk@0.4.0 @fhenixprotocol/cofhe-contracts@0.1.0`}
-                />
+            <Section title="3. Install CoFHE + Fhenix Dependencies">
+                <div style={{ marginBottom: 24 }}>
+                    <CodeSnippet
+                        code={`npm install @cofhe/hardhat-plugin@^0.4.0 @cofhe/sdk@0.4.0 @fhenixprotocol/cofhe-contracts@0.1.0`}
+                    />
+                </div>
 
-                <RuleList
-                    items={[
-                        "@cofhe/hardhat-plugin → integrates Fully Homomorphic Encryption (FHE) into the Hardhat workflow",
-                        "It modifies the compile, deploy, and execution pipeline so smart contracts can operate on encrypted data",
-                        "It also provides a mock FHE runtime locally, allowing encrypted logic to be tested without a real network",
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+                    <FeatureCard
+                        title="@cofhe/hardhat-plugin"
+                        description="Integrates Fully Homomorphic Encryption (FHE) into the Hardhat workflow."
+                        bullets={[
+                            "Modifies compile, deploy, and execution pipeline for encrypted data",
+                            "Provides a mock FHE runtime locally",
+                            "Allows encrypted logic testing without a real network"
+                        ]}
+                    />
 
-                        "@cofhe/sdk → acts as the client-side bridge for encryption workflows",
-                        "It is responsible for encrypting inputs before sending them to contracts",
-                        "It manages permissions (permits) required to decrypt results securely",
-                        "It ensures that sensitive data is never exposed in plaintext during interaction",
+                    <FeatureCard
+                        title="@cofhe/sdk"
+                        description="Acts as the client-side bridge for encryption workflows."
+                        bullets={[
+                            "Encrypts inputs before sending to contracts",
+                            "Manages permits required to decrypt securely",
+                            "Ensures sensitive data is never exposed in plaintext"
+                        ]}
+                    />
 
-                        "@fhenixprotocol/cofhe-contracts → provides Solidity-level encrypted primitives",
-                        "These include encrypted data types (like encrypted integers and booleans)",
-                        "It enables writing smart contracts that perform computation directly on encrypted values",
-                        "It ensures compatibility with the CoFHE execution model used by the plugin",
-                    ]}
-                />
+                    <FeatureCard
+                        title="@fhenixprotocol/cofhe-contracts"
+                        description="Provides Solidity-level encrypted primitives."
+                        bullets={[
+                            "Includes encrypted data types (uint, bool)",
+                            "Enables smart contracts to compute directly on encrypted values",
+                            "Ensures compatibility with the CoFHE execution model"
+                        ]}
+                    />
+                </div>
 
-                <p className="text-sm text-gray-400 mt-2">
-                    These packages together enable a full encrypted execution pipeline:
-                    inputs are encrypted on the client, processed securely inside smart contracts,
-                    and only decrypted when explicitly permitted.
-                </p>
-
-                <p className="text-sm text-gray-400">
-                    All dependencies are installed inside <b>node_modules</b> and automatically linked into the Hardhat environment.
+                <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 16, lineHeight: 1.6 }}>
+                    These packages together enable a full encrypted execution pipeline: inputs are encrypted on the client, processed securely inside smart contracts, and only decrypted when explicitly permitted. All dependencies are installed inside <strong>node_modules</strong> and automatically linked into the Hardhat environment.
                 </p>
             </Section>
 
             {/* STEP 4 */}
-            <Section title="⚙️ 4. Initialize Hardhat Project">
+            <Section title="4. Initialize Hardhat Project">
                 <CodeBlock file="terminal" code={`npx hardhat`} />
 
-                <RuleList
-                    items={[
-                        "Select: Create TypeScript project",
-                        "Accept sample project",
-                    ]}
-                />
+                <div style={{ marginTop: 20, marginBottom: 20 }}>
+                    <RuleList
+                        items={[
+                            "Select: Create TypeScript project",
+                            "Accept sample project",
+                        ]}
+                    />
+                </div>
 
                 <CodeSnippet
                     code={`project-root/
@@ -130,9 +157,9 @@ export default function Phase1InstallationSetup() {
             </Section>
 
             {/* CONFIG */}
-            <Section title="⚙️ 5. Hardhat Configuration">
-                <p className="text-sm text-gray-400 mb-2">
-                    📄 File: hardhat.config.ts
+            <Section title="5. Hardhat Configuration">
+                <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 12 }}>
+                    File: <code style={{ background: "var(--color-bg-elevated)", padding: "2px 6px", borderRadius: 4 }}>hardhat.config.ts</code>
                 </p>
 
                 <CodeSnippet
@@ -140,29 +167,31 @@ export default function Phase1InstallationSetup() {
 import "@nomicfoundation/hardhat-toolbox";
 
 const config = {
-  solidity: {
-    version: "0.8.28", // or 0.8.25
-    settings: {
-      evmVersion: "cancun",
+    solidity: {
+        version: "0.8.28", // or 0.8.25
+        settings: {
+            evmVersion: "cancun",
+        },
     },
-  },
 };
 
 export default config;`}
                 />
 
-                <RuleList
-                    items={[
-                        "CoFHE plugin must be loaded to enable encrypted execution",
-                        "Toolbox provides ethers v6 and testing utilities",
-                        "Solidity version must match compiler expectations",
-                        "EVM Cancun ensures compatibility with latest features",
-                    ]}
-                />
+                <div style={{ marginTop: 24 }}>
+                    <RuleList
+                        items={[
+                            "CoFHE plugin must be loaded to enable encrypted execution",
+                            "Toolbox provides ethers v6 and testing utilities",
+                            "Solidity version must match compiler expectations",
+                            "EVM Cancun ensures compatibility with latest features",
+                        ]}
+                    />
+                </div>
             </Section>
 
             {/* OUTCOME */}
-            <Section title="🚀 6. Outcome">
+            <Section title="6. Outcome">
                 <RuleList
                     items={[
                         "Node.js project initialized",
@@ -174,7 +203,6 @@ export default config;`}
                     ]}
                 />
             </Section>
-
 
         </div>
     );

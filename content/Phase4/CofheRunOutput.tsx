@@ -3,14 +3,10 @@ import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
 
 export default function CofheRunOutput() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🚀 Run & Output
-            </h1>
+        <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
 
             {/* RUN COMMAND */}
-            <Section title="▶️ Run the App">
+            <Section title="Run the App">
                 <p className="text-sm text-gray-400 mb-3">
                     Start the development server:
                 </p>
@@ -25,7 +21,7 @@ export default function CofheRunOutput() {
             </Section>
 
             {/* OUTPUT */}
-            <Section title="🖥️ Output UI">
+            <Section title="Output UI">
                 <p className="text-sm text-gray-400 mb-4">
                     After running the app, you will see the following interface:
                 </p>

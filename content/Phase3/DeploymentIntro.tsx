@@ -1,134 +1,105 @@
+"use client";
+
 import Section from "@/content/ComponentsForCode/Section";
 import RuleList from "@/content/ComponentsForCode/RuleList";
-import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
+import ArrowFlow from "@/content/ComponentsForCode/ArrowFlow";
 
-export default function DeploymentComponent() {
+export default function DeploymentIntro() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🚀 What is Deployment in Smart Contracts?
-            </h1>
-
-            <Section title="🧠 Simple Understanding">
-                <p>
+        <div style={{ paddingBottom: "40px" }}>
+            <Section title="Simple Understanding">
+                <p style={{ fontSize: 16, color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 16 }}>
                     Deployment is the process of taking your smart contract code and making it live on a blockchain network.
                     Once deployed, it becomes permanent, accessible, and interactable by anyone.
                 </p>
 
-                <p className="mt-2">
-                    Think of deployment as moving your contract from your computer → to the blockchain.
+                <p style={{ fontSize: 15, color: "var(--color-text-primary)", fontWeight: 500, marginBottom: 24 }}>
+                    Think of deployment as moving your contract from your computer &rarr; to the blockchain.
                 </p>
 
-                <CodeSnippet code={`Code → Compile → Sign → Send → Blockchain → Live Contract`} />
-            </Section>
-
-            <Section title="❓ Why do we need Deployment?">
-                <RuleList
-                    items={[
-                        "Smart contracts on your system are not accessible to users",
-                        "Blockchain requires deployed bytecode to execute logic",
-                        "Frontend apps need a contract address to interact with",
+                <ArrowFlow
+                    steps={[
+                        "Code", "Compile", "Sign", "Send", "Blockchain", "Live Contract"
                     ]}
                 />
             </Section>
 
-            <Section title="🧩 What happens during Deployment?">
+            <Section title="Why do we need Deployment?">
+                <RuleList
+                    items={[
+                        "Smart contracts on your local system are not accessible to users",
+                        "The blockchain requires deployed bytecode to execute logic",
+                        "Frontend apps need a unique contract address to interact with",
+                    ]}
+                />
+            </Section>
+
+            <Section title="What happens during Deployment?">
                 <RuleList
                     items={[
                         "Solidity code is compiled into bytecode",
                         "A deployment transaction is created",
-                        "Wallet (MetaMask / Private Key) signs it",
-                        "Transaction is sent via RPC",
-                        "Blockchain executes and stores the contract",
-                        "A contract address is generated",
+                        "Your Wallet (MetaMask / Private Key) signs it",
+                        "The transaction is sent via RPC",
+                        "The blockchain executes and stores the contract permanently",
+                        "A unique contract address is generated",
                     ]}
                 />
             </Section>
 
-            <Section title="⚙️ What do we need for Deployment?">
+            <Section title="Requirements for Deployment">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24, marginTop: 16 }}>
+                    <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>1. Wallet / Private Key</h4>
+                        <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>Used to sign transactions and prove ownership of deployment. Usually from MetaMask.</p>
+                    </div>
 
-                <h3 className="font-semibold mt-2">🔑 1. Wallet / Private Key</h3>
-                <p>
-                    Used to sign transactions and prove ownership of deployment.
-                    Usually comes from MetaMask.
-                </p>
+                    <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>2. RPC URL</h4>
+                        <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0, marginBottom: 8 }}>RPC is the connection between your code and the blockchain.</p>
+                        <a href="https://developer.metamask.io/login" target="_blank" style={{ color: "var(--color-accent)", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>&rarr; MetaMask Developer Portal</a>
+                    </div>
 
-                <h3 className="font-semibold mt-6">🌐 2. RPC URL</h3>
-                <p>
-                    RPC is the connection between your code and the blockchain.
-                </p>
+                    <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>3. MetaMask Wallet</h4>
+                        <RuleList items={["Managing accounts", "Switching networks (like Sepolia)", "Signing transactions"]} />
+                    </div>
 
-                <p className="mt-2">👉 Get RPC URL from MetaMask Developer Portal:</p>
+                    <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>4. Faucet (Test ETH)</h4>
+                        <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>Needed because deployment requires gas fees. Faucets give free Sepolia ETH for testing.</p>
+                    </div>
 
-                <a
-                    href="https://developer.metamask.io/login"
-                    target="_blank"
-                    className="text-blue-400 underline"
-                >
-                    MetaMask Developer Portal
-                </a>
-
-                <h3 className="font-semibold mt-6">🦊 3. MetaMask Wallet</h3>
-
-                <RuleList
-                    items={[
-                        "Managing accounts",
-                        "Switching networks (like Sepolia)",
-                        "Signing transactions",
-                    ]}
-                />
-
-                <h3 className="font-semibold mt-6">🚰 4. Faucet (Test ETH)</h3>
-                <p>
-                    Needed because deployment requires gas fees. Faucets give free Sepolia ETH for testing.
-                </p>
-
-                <h3 className="font-semibold mt-6">🔎 5. Sepolia Etherscan</h3>
-
-                <RuleList
-                    items={[
-                        "Track transactions",
-                        "Verify contract deployment",
-                        "View contract address",
-                    ]}
-                />
-
-                <a
-                    href="https://sepolia.etherscan.io"
-                    target="_blank"
-                    className="text-blue-400 underline"
-                >
-                    Sepolia Etherscan
-                </a>
+                    <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>5. Sepolia Etherscan</h4>
+                        <RuleList items={["Track transactions", "Verify contract deployment", "View contract address"]} />
+                        <div style={{ marginTop: 8 }}>
+                            <a href="https://sepolia.etherscan.io" target="_blank" style={{ color: "var(--color-accent)", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>&rarr; Sepolia Etherscan</a>
+                        </div>
+                    </div>
+                </div>
             </Section>
 
-            <Section title="🔄 Full Deployment Flow">
-                <CodeSnippet
-                    code={`MetaMask Wallet
-↓
-Private Key
-↓
-Hardhat / Script Config
-↓
-RPC URL (MetaMask Developer Portal)
-↓
-Transaction Signing
-↓
-Sepolia Blockchain
-↓
-Contract Deployment
-↓
-Etherscan Verification`}
+            <Section title="Full Deployment Flow">
+                <p style={{ fontSize: 15, color: "var(--color-text-secondary)", marginBottom: 24 }}>
+                    From configuration to verification.
+                </p>
+                <ArrowFlow
+                    steps={[
+                        "MetaMask Wallet", "Private Key", "Hardhat Config", "RPC URL", "Transaction Signing", "Sepolia Blockchain", "Contract Deployment", "Etherscan Verification"
+                    ]}
                 />
             </Section>
 
-            <Section title="🧠 Key Takeaway">
-                <p>
+            <Section title="Key Takeaway">
+                <div style={{
+                    padding: "20px 24px", background: "var(--color-bg-elevated)",
+                    borderLeft: "4px solid var(--color-accent)", borderRadius: "8px",
+                    color: "var(--color-text-primary)", fontSize: "15px", fontWeight: 500
+                }}>
                     Deployment is a signed blockchain transaction that permanently stores your smart contract on the network.
-                </p>
+                </div>
             </Section>
-
         </div>
     );
 }

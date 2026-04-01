@@ -57,7 +57,7 @@ export default function CodeBlock({ title, file, code, language }: CodeBlockProp
                 </div>
             )}
 
-            <CodeSnippet code={code} language={language} />
+            <CodeSnippet code={code} language={language} hasTab={!!file} />
         </div>
     );
 }

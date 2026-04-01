@@ -1,5 +1,6 @@
 import "./globals.css";
 import { SidebarProvider } from "@/components/SidebarContext";
+import { ThemeProvider } from "@/components/ThemeContext";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 
@@ -15,30 +16,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body>
-        <SidebarProvider>
-          <Header />
-          <Sidebar />
-          <main
-            style={{
-              marginLeft: 272,
-              paddingTop: 60,
-              minHeight: "100vh",
-            }}
-            className="main-content-area"
-          >
-            {children}
-          </main>
+        <ThemeProvider>
+          <SidebarProvider>
+            <Header />
+            <Sidebar />
+            <main
+              style={{
+                marginLeft: 320,
+                paddingTop: 60,
+                minHeight: "100vh",
+              }}
+              className="main-content-area"
+            >
+              {children}
+            </main>
 
-          <style>{`
-                        @media (max-width: 768px) {
-                            .main-content-area {
-                                margin-left: 0 !important;
+            <style>{`
+                            @media (max-width: 768px) {
+                                .main-content-area {
+                                    margin-left: 0 !important;
+                                }
                             }
-                        }
-                    `}</style>
-        </SidebarProvider>
+                        `}</style>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

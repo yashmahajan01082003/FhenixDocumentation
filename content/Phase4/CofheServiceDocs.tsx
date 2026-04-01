@@ -1,17 +1,15 @@
+"use client";
+
 import Section from "@/content/ComponentsForCode/Section";
 import RuleList from "@/content/ComponentsForCode/RuleList";
 import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
+import FunctionTooltip from "@/content/ComponentsForCode/FunctionTooltip";
 
 export default function CofheServiceDocs() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🔐 Cofhe Service Layer — Function-Level Overview
-            </h1>
-
+        <div style={{ paddingBottom: "40px" }}>
             {/* STRUCTURE */}
-            <Section title="🗂️ 1. Project Structure">
+            <Section title="1. Project Structure">
                 <CodeSnippet
                     code={`src/
 ├── config/
@@ -25,7 +23,7 @@ export default function CofheServiceDocs() {
             </Section>
 
             {/* FULL FILE */}
-            <Section title="📜 2. Full cofheService.js File">
+            <Section title="2. Full cofheService.js File">
                 <CodeSnippet code={`// imports
 import { createCofheConfig, createCofheClient } from "@cofhe/sdk/web";
 import { Encryptable, FheTypes } from "@cofhe/sdk";
@@ -43,178 +41,168 @@ let account;
 
 // init
 export async function init() {
-  await window.ethereum.request({
-    method: "wallet_switchEthereumChain",
-    params: [{ chainId: "0xaa36a7" }],
-  });
+    await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0xaa36a7" }],
+    });
 
-  const config = createCofheConfig({
-    supportedChains: [chains.sepolia],
-  });
+    const config = createCofheConfig({
+        supportedChains: [chains.sepolia],
+    });
 
-  client = createCofheClient(config);
+    client = createCofheClient(config);
 
-  publicClient = createPublicClient({
-    chain: sepolia,
-    transport: http(),
-  });
+    publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http(),
+    });
 
-  walletClient = createWalletClient({
-    chain: sepolia,
-    transport: custom(window.ethereum),
-  });
+    walletClient = createWalletClient({
+        chain: sepolia,
+        transport: custom(window.ethereum),
+    });
 
-  const accounts = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
+    const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+    });
 
-  account = accounts[0];
+    account = accounts[0];
 
-  await client.connect(publicClient, walletClient);
-  walletClient.account = account;
+    await client.connect(publicClient, walletClient);
+    walletClient.account = account;
 
-  await client.permits.getOrCreateSelfPermit();
+    await client.permits.getOrCreateSelfPermit();
 }
 
 // deposit
 export async function deposit(amount) {
-  const [encryptedAmount] = await client
-    .encryptInputs([Encryptable.uint64(BigInt(amount))])
-    .execute();
+    const [encryptedAmount] = await client
+        .encryptInputs([Encryptable.uint64(BigInt(amount))])
+        .execute();
 
-  await walletClient.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: "deposit",
-    args: [encryptedAmount],
-    account,
-  });
+    await walletClient.writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: "deposit",
+        args: [encryptedAmount],
+        account,
+    });
 }
 
 // get balance
 export async function getBalance() {
-  const permit = await client.permits.getOrCreateSelfPermit();
+    const permit = await client.permits.getOrCreateSelfPermit();
 
-  const ctHash = await publicClient.readContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: "getBalance",
-    account,
-  });
+    const ctHash = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: "getBalance",
+        account,
+    });
 
-  return await client
-    .decryptForView(ctHash, FheTypes.Uint64)
-    .withPermit(permit)
-    .execute();
+    return await client
+        .decryptForView(ctHash, FheTypes.Uint64)
+        .withPermit(permit)
+        .execute();
 }
 
 // publish
 export async function publishBalance() {
-  const permit = await client.permits.getOrCreateSelfPermit();
+    const permit = await client.permits.getOrCreateSelfPermit();
 
-  const ctHash = await publicClient.readContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: "getBalance",
-    account,
-  });
+    const ctHash = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: "getBalance",
+        account,
+    });
 
-  const { decryptedValue, signature } = await client
-    .decryptForTx(ctHash)
-    .withPermit(permit)
-    .execute();
+    const { decryptedValue, signature } = await client
+        .decryptForTx(ctHash)
+        .withPermit(permit)
+        .execute();
 
-  await walletClient.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: "publishBalance",
-    args: [ctHash, decryptedValue, signature],
-    account,
-  });
+    await walletClient.writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: "publishBalance",
+        args: [ctHash, decryptedValue, signature],
+        account,
+    });
 }`}
                 />
             </Section>
 
             {/* FUNCTION LEVEL */}
-            <Section title="🧠 3. Function-Level Explanation">
-
-                <h3 className="font-semibold mt-4">⚙️ init()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Initializes Cofhe + blockchain environment.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Sets up global clients (no return)
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Switches wallet to Sepolia network
-                    <br />
-                    - Creates Cofhe encryption client
-                    <br />
-                    - Initializes public + wallet clients
-                    <br />
-                    - Connects wallet account
-                    <br />
-                    - Generates permit for encrypted operations
+            <Section title="3. Function-Level Explanation">
+                <p style={{ color: "var(--color-text-secondary)", marginBottom: 24, fontSize: 15 }}>
+                    Hover over the function names below to see exactly what they do, what inputs they take, and how the encryption steps are applied.
                 </p>
 
-                <h3 className="font-semibold mt-6">📥 deposit(amount)</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Stores encrypted value on-chain.
-                    <br /><br />
-                    <b>Input:</b> amount (number)
-                    <br />
-                    <b>Output:</b> Transaction sent to contract
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Converts amount → uint64
-                    <br />
-                    - Encrypts using Cofhe
-                    <br />
-                    - Sends encrypted value to smart contract
-                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div>
+                        <FunctionTooltip
+                            name="init()"
+                            purpose="Initializes Cofhe + blockchain environment."
+                            input="None"
+                            output="Sets up global clients (no return)"
+                            processing={[
+                                "Switches wallet to Sepolia network",
+                                "Creates Cofhe encryption client",
+                                "Initializes public + wallet clients",
+                                "Connects wallet account",
+                                "Generates permit for encrypted operations"
+                            ]}
+                        />
+                    </div>
 
-                <h3 className="font-semibold mt-6">👀 getBalance()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Retrieves and decrypts balance.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Decrypted balance (number)
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Fetches encrypted balance (ctHash)
-                    <br />
-                    - Uses permit for access
-                    <br />
-                    - Decrypts locally in browser
-                </p>
+                    <div>
+                        <FunctionTooltip
+                            name="deposit(amount)"
+                            purpose="Stores encrypted value on-chain."
+                            input="amount (number)"
+                            output="Transaction sent to contract"
+                            processing={[
+                                "Converts amount → uint64",
+                                "Encrypts using Cofhe",
+                                "Sends encrypted value to smart contract"
+                            ]}
+                        />
+                    </div>
 
-                <h3 className="font-semibold mt-6">📤 publishBalance()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Publishes decrypted balance on-chain.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Transaction confirming public value
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Fetches encrypted balance
-                    <br />
-                    - Decrypts + generates cryptographic proof
-                    <br />
-                    - Sends value + signature to contract
-                </p>
+                    <div>
+                        <FunctionTooltip
+                            name="getBalance()"
+                            purpose="Retrieves and decrypts balance."
+                            input="None"
+                            output="Decrypted balance (number)"
+                            processing={[
+                                "Fetches encrypted balance (ctHash)",
+                                "Uses permit for access",
+                                "Decrypts locally in browser"
+                            ]}
+                        />
+                    </div>
 
+                    <div>
+                        <FunctionTooltip
+                            name="publishBalance()"
+                            purpose="Publishes decrypted balance on-chain."
+                            input="None"
+                            output="Transaction confirming public value"
+                            processing={[
+                                "Fetches encrypted balance",
+                                "Decrypts + generates cryptographic proof",
+                                "Sends value + signature to contract"
+                            ]}
+                        />
+                    </div>
+                </div>
             </Section>
 
             {/* FINAL */}
-            <Section title="🧠 Final Insight">
-                <p className="text-yellow-300 font-medium">
+            <Section title="Final Insight">
+                <p style={{ color: "var(--color-accent)", fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
                     This is encrypted computation, not just API calls.
                 </p>
 

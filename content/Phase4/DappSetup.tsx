@@ -4,14 +4,10 @@ import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
 
 export default function DappSetup() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🌐 Phase 1 — DApp Environment Setup (Compatibility Layer)
-            </h1>
+        <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
 
             {/* INTRO */}
-            <Section title="🧠 1. What This Step Is About">
+            <Section title="1. What This Step Is About">
                 <p className="text-sm text-gray-400">
                     This step does NOT involve writing any business logic.
                 </p>
@@ -27,7 +23,7 @@ export default function DappSetup() {
             </Section>
 
             {/* CREATE APP */}
-            <Section title="⚙️ 2. Create Frontend Project">
+            <Section title="2. Create Frontend Project">
                 <CodeSnippet
                     code={`npm create vite@latest fhenix-cofhe-dapp
 choose react and javascript
@@ -44,7 +40,7 @@ cd ./fhenix-cofhe-dapp/`}
             </Section>
 
             {/* INSTALL DEPENDENCIES */}
-            <Section title="📦 3. Install Required Packages">
+            <Section title="3. Install Required Packages">
                 <CodeSnippet
                     code={`npm install @cofhe/sdk@^0.4.0 react@19.2.4 react-dom@19.2.4 viem@2.47.6`}
                 />
@@ -58,25 +54,25 @@ cd ./fhenix-cofhe-dapp/`}
                 />
 
                 <p className="text-sm text-gray-400 mt-2">
-                    ⚠️ At this stage, these are only installed for compatibility —
+                    At this stage, these are only installed for compatibility —
                     not actively used yet.
                 </p>
             </Section>
 
             {/* DIRECTORY */}
-            <Section title="📁 4. Project Structure Created">
+            <Section title="4. Project Structure Created">
                 <CodeSnippet
                     code={`fhenix-cofhe-dapp/
 ├── node_modules/
 ├── public/
-│   ├── favicon.svg
-│   └── icons.svg
+│ ├── favicon.svg
+│ └── icons.svg
 ├── src/
-│   ├── assets/
-│   ├── App.css
-│   ├── App.jsx
-│   ├── index.css
-│   ├── main.jsx
+│ ├── assets/
+│ ├── App.css
+│ ├── App.jsx
+│ ├── index.css
+│ ├── main.jsx
 ├── .gitignore
 ├── eslint.config.js
 ├── index.html
@@ -98,7 +94,7 @@ cd ./fhenix-cofhe-dapp/`}
             </Section>
 
             {/* COMPATIBILITY */}
-            <Section title="🔗 5. Why This Setup Matters">
+            <Section title="5. Why This Setup Matters">
                 <RuleList
                     items={[
                         "Ensures frontend can later talk to blockchain",
@@ -114,7 +110,7 @@ cd ./fhenix-cofhe-dapp/`}
             </Section>
 
             {/* RUN */}
-            <Section title="▶️ 6. Verify Setup (Run Project)">
+            <Section title="6. Verify Setup (Run Project)">
                 <CodeSnippet
                     code={`npm run dev`}
                 />
@@ -129,7 +125,7 @@ cd ./fhenix-cofhe-dapp/`}
             </Section>
 
             {/* FINAL */}
-            <Section title="🧠 Final Understanding">
+            <Section title="Final Understanding">
                 <p className="text-yellow-300 font-medium">
                     This step is about compatibility — not functionality.
                 </p>

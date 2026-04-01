@@ -18,7 +18,25 @@ import CofheServiceDocs from "@/content/Phase4/CofheServiceDocs";
 import ReactUIDocs from "@/content/Phase4/ReactUIDocs";
 import CofheRunOutput from "@/content/Phase4/CofheRunOutput";
 
-export const docsConfig = [
+export type RightPanelSection = {
+    heading: string;
+    items: string[];
+};
+
+export type DocItem = {
+    slug: string;
+    title: string;
+    component: React.ComponentType;
+    rightPanel: RightPanelSection[];
+};
+
+export type PhaseConfig = {
+    phase: string;
+    title: string;
+    items: DocItem[];
+};
+
+export const docsConfig: PhaseConfig[] = [
     {
         phase: "phase-0",
         title: "Understanding Problems and Breakthroughs",
@@ -27,31 +45,46 @@ export const docsConfig = [
                 slug: "why-privacy-matters",
                 title: "Why Blockchains Need Privacy?",
                 component: WhyPrivacyMatters,
-                rightPanel: ["Overview", "Basics"]
+                rightPanel: [
+                    { heading: "Overview", items: ["Why Privacy Matters", "The Transparency Problem"] },
+                    { heading: "Key Concepts", items: ["Public Ledgers", "Data Exposure Risks"] },
+                ]
             },
             {
                 slug: "prove-without-revealing",
                 title: "What If You Could Prove Without Revealing?",
                 component: ProveWithoutRevealing,
-                rightPanel: ["Overview", "Basics"]
+                rightPanel: [
+                    { heading: "Overview", items: ["Zero-Knowledge Proofs", "Proof Systems"] },
+                    { heading: "Applications", items: ["Privacy Preservation", "Verification"] },
+                ]
             },
             {
                 slug: "how-fhe-works",
                 title: "How Does FHE Actually Work?",
                 component: HowFHEWorks,
-                rightPanel: ["Overview", "Basics"]
+                rightPanel: [
+                    { heading: "Encryption", items: ["Turn Data into Secret Code", "Special Math Rules"] },
+                    { heading: "FHE Process", items: ["Encrypted Computation", "Decryption"] },
+                ]
             },
             {
                 slug: "introducing-fhenix",
                 title: "From Idea to Reality: Fhenix",
                 component: IntroducingFhenix,
-                rightPanel: ["Overview", "Basics"]
+                rightPanel: [
+                    { heading: "Overview", items: ["What is Fhenix", "Architecture"] },
+                    { heading: "Features", items: ["FHE Integration", "Smart Contracts"] },
+                ]
             },
             {
                 slug: "roadmap-for-workshop",
                 title: "Roadmap for the Workshop",
                 component: WorkshopRoadmap,
-                rightPanel: ["Overview", "Basics"]
+                rightPanel: [
+                    { heading: "Workshop Plan", items: ["Phase Overview", "Learning Goals"] },
+                    { heading: "Prerequisites", items: ["Requirements", "Setup"] },
+                ]
             },
         ]
     },
@@ -63,19 +96,28 @@ export const docsConfig = [
                 slug: "environment-construction",
                 title: "Deterministic Environment Construction",
                 component: Phase1InstallationSetup,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Installation", items: ["Node.js Setup", "Hardhat Config"] },
+                    { heading: "Configuration", items: ["FHE Plugin", "Network Setup"] },
+                ]
             },
             {
                 slug: "single-command-setup",
                 title: "Single Command Environment Construction",
                 component: Phase1SingleCommandSetup,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Quick Start", items: ["One-Command Setup", "Verification"] },
+                    { heading: "Troubleshooting", items: ["Common Issues", "Fix Steps"] },
+                ]
             },
             {
                 slug: "common-errors",
                 title: "Common Errors and Troubleshooting",
                 component: Phase1CommonErrors,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Errors", items: ["Build Errors", "Runtime Errors"] },
+                    { heading: "Solutions", items: ["Quick Fixes", "Debug Tips"] },
+                ]
             }
         ]
     },
@@ -87,19 +129,28 @@ export const docsConfig = [
                 slug: "first-smart-contract",
                 title: "Creating Contract using Fhenix",
                 component: ConfidentialVaultDocs,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Contract Structure", items: ["Encrypted Types", "State Variables"] },
+                    { heading: "Functions", items: ["Deposit", "Get Balance", "Publish"] },
+                ]
             },
             {
                 slug: "compilation-of-contract",
                 title: "Compilation of Contract",
                 component: CompileFlowDocs,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Compilation", items: ["FHE Compilation", "Artifact Output"] },
+                    { heading: "Verification", items: ["Check ABI", "Contract Validation"] },
+                ]
             },
             {
                 slug: "common-errors",
                 title: "Testing Contract Locally",
                 component: TestingDocumentation,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Testing", items: ["Local Network", "Test Scripts"] },
+                    { heading: "Validation", items: ["Encrypt & Decrypt", "Assertions"] },
+                ]
             }
         ]
     },
@@ -111,19 +162,28 @@ export const docsConfig = [
                 slug: "deployment-intro",
                 title: "What is Deployment?",
                 component: DeploymentIntro,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Concepts", items: ["What is Deployment", "Why Deploy"] },
+                    { heading: "Requirements", items: ["Wallet & Keys", "RPC URL", "Test ETH"] },
+                ]
             },
             {
                 slug: "deployment-tools",
                 title: "Tools Needed For Deployment",
                 component: DeploymentToolsDeepDive,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Wallet", items: ["MetaMask Setup", "Private Key"] },
+                    { heading: "Network", items: ["RPC Configuration", "Faucets"] },
+                ]
             },
             {
                 slug: "deployment-code-setup",
                 title: "Deployment Code Setup",
                 component: DeploymentCodeSetup,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Configuration", items: ["Deploy Script", "Environment Variables"] },
+                    { heading: "Execution", items: ["Run Deploy", "Verify Contract"] },
+                ]
             }
         ]
     },
@@ -135,31 +195,46 @@ export const docsConfig = [
                 slug: "dapp-intro-setup",
                 title: "Setup for Dapp",
                 component: DappSetup,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Project Setup", items: ["Create React App", "Install Dependencies"] },
+                    { heading: "Structure", items: ["File Organization", "Configuration"] },
+                ]
             },
             {
                 slug: "frontend-config",
                 title: "Add Keys to Connect Frontend to Blockchain",
                 component: FrontendConfigDocs,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Configuration", items: ["Contract Address", "ABI Setup"] },
+                    { heading: "Connection", items: ["Provider Config", "Signer Setup"] },
+                ]
             },
             {
                 slug: "user-friendly-cofhe-service",
                 title: "User-Friendly Cofhe Service",
                 component: CofheServiceDocs,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Service Layer", items: ["Init Function", "Encrypt & Send"] },
+                    { heading: "Operations", items: ["Deposit", "Balance", "Publish"] },
+                ]
             },
             {
                 slug: "react-ui-layer",
                 title: "React UI Layer — Connecting User to Blockchain",
                 component: ReactUIDocs,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "UI Layer", items: ["App Component", "State Management"] },
+                    { heading: "Functions", items: ["init()", "handleDeposit()", "handleBalance()", "handlePublish()"] },
+                ]
             },
             {
                 slug: "cofhe-run-output",
                 title: "Run & Output",
                 component: CofheRunOutput,
-                rightPanel: ["Encrypt", "Client"]
+                rightPanel: [
+                    { heading: "Execution", items: ["Run DApp", "Expected Output"] },
+                    { heading: "Verification", items: ["Transaction Check", "Balance Display"] },
+                ]
             }
         ]
     }

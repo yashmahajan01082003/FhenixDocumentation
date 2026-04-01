@@ -1,33 +1,31 @@
+"use client";
+
 import Section from "@/content/ComponentsForCode/Section";
 import RuleList from "@/content/ComponentsForCode/RuleList";
 import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
+import FunctionTooltip from "@/content/ComponentsForCode/FunctionTooltip";
 
 export default function ReactUIDocs() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                ⚛️ React UI Layer — Function-Level Overview
-            </h1>
-
+        <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
             {/* INTRO */}
-            <Section title="🧠 1. What is This Layer?">
-                <p className="text-sm text-gray-400">
+            <Section title="1. What is This Layer?">
+                <p style={{ fontSize: 16, color: "var(--color-text-secondary)", marginBottom: 16 }}>
                     This is the frontend UI that users interact with.
                 </p>
 
-                <p className="mt-2 text-yellow-300">
-                    👉 Connects user actions → Cofhe service → blockchain
+                <p style={{ fontSize: 15, color: "var(--color-accent)", fontWeight: 600 }}>
+                    Connects user actions &rarr; Cofhe service &rarr; blockchain
                 </p>
             </Section>
 
             {/* FILE */}
-            <Section title="📁 2. File Location">
+            <Section title="2. File Location">
                 <CodeSnippet code={`src/App.jsx`} />
             </Section>
 
             {/* FULL CODE */}
-            <Section title="📜 3. Full App.jsx Code">
+            <Section title="3. Full App.jsx Code">
                 <CodeSnippet
                     code={`import { useState, useEffect, useRef } from "react";
 import {
@@ -90,78 +88,71 @@ export default App;`}
             </Section>
 
             {/* FUNCTION LEVEL */}
-            <Section title="🧠 4. Function-Level Explanation">
-
-                <h3 className="font-semibold mt-4">⚙️ init() (via useEffect)</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Initializes Cofhe + wallet connection when UI loads.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Sets up encryption + blockchain access
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Runs once on component mount
-                    <br />
-                    - Calls init() from service layer
-                    <br />
-                    - Ensures wallet + permits are ready
+            <Section title="4. Function-Level Explanation">
+                <p style={{ fontSize: 15, color: "var(--color-text-secondary)", marginBottom: 24 }}>
+                    Hover over the UI event handlers to see how they wire up the encryption service to the interface state.
                 </p>
 
-                <h3 className="font-semibold mt-6">📥 handleDeposit()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Sends user input to blockchain securely.
-                    <br /><br />
-                    <b>Input:</b> amount (from state)
-                    <br />
-                    <b>Output:</b> Deposit transaction
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Reads input value
-                    <br />
-                    - Calls service.deposit()
-                    <br />
-                    - Triggers encryption + contract call
-                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div>
+                        <FunctionTooltip
+                            name="init() (via useEffect)"
+                            purpose="Initializes Cofhe + wallet connection when UI loads."
+                            input="None"
+                            output="Sets up encryption + blockchain access"
+                            processing={[
+                                "Runs once on component mount",
+                                "Calls init() from service layer",
+                                "Ensures wallet + permits are ready"
+                            ]}
+                        />
+                    </div>
 
-                <h3 className="font-semibold mt-6">👀 handleBalance()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Retrieves and displays balance.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Updates UI with decrypted balance
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Calls service.getBalance()
-                    <br />
-                    - Receives decrypted value
-                    <br />
-                    - Updates React state
-                </p>
+                    <div>
+                        <FunctionTooltip
+                            name="handleDeposit()"
+                            purpose="Sends user input to blockchain securely."
+                            input="amount (from state)"
+                            output="Deposit transaction"
+                            processing={[
+                                "Reads input value",
+                                "Calls service.deposit()",
+                                "Triggers encryption + contract call"
+                            ]}
+                        />
+                    </div>
 
-                <h3 className="font-semibold mt-6">📤 handlePublish()</h3>
-                <p className="text-sm text-gray-400">
-                    <b>Purpose:</b> Publishes decrypted balance on-chain.
-                    <br /><br />
-                    <b>Input:</b> None
-                    <br />
-                    <b>Output:</b> Transaction confirming public value
-                    <br /><br />
-                    <b>Processing:</b>
-                    <br />
-                    - Calls service.publishBalance()
-                    <br />
-                    - Generates proof + sends to contract
-                </p>
+                    <div>
+                        <FunctionTooltip
+                            name="handleBalance()"
+                            purpose="Retrieves and displays balance."
+                            input="None"
+                            output="Updates UI with decrypted balance"
+                            processing={[
+                                "Calls service.getBalance()",
+                                "Receives decrypted value",
+                                "Updates React state"
+                            ]}
+                        />
+                    </div>
 
+                    <div>
+                        <FunctionTooltip
+                            name="handlePublish()"
+                            purpose="Publishes decrypted balance on-chain."
+                            input="None"
+                            output="Transaction confirming public value"
+                            processing={[
+                                "Calls service.publishBalance()",
+                                "Generates proof + sends to contract"
+                            ]}
+                        />
+                    </div>
+                </div>
             </Section>
 
             {/* UI ROLE */}
-            <Section title="🖥️ 5. UI Responsibility">
+            <Section title="5. UI Responsibility">
                 <RuleList
                     items={[
                         "Captures user input",
@@ -173,14 +164,18 @@ export default App;`}
             </Section>
 
             {/* FINAL */}
-            <Section title="🧠 Final Insight">
-                <p className="text-yellow-300 font-medium">
-                    UI is thin — all intelligence lives in the Cofhe service.
-                </p>
-
-                <p className="text-sm text-gray-400 mt-2">
-                    This separation keeps the system secure, modular, and scalable.
-                </p>
+            <Section title="Final Insight">
+                <div style={{
+                    padding: "20px 24px", background: "var(--color-bg-elevated)",
+                    borderLeft: "4px solid var(--color-accent)", borderRadius: "8px",
+                }}>
+                    <p style={{ color: "var(--color-text-primary)", fontSize: "15px", fontWeight: 600, marginBottom: "8px" }}>
+                        UI is thin &mdash; all intelligence lives in the Cofhe service.
+                    </p>
+                    <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>
+                        This separation keeps the system secure, modular, and scalable.
+                    </p>
+                </div>
             </Section>
 
         </div>

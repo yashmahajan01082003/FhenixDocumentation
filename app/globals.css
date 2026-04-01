@@ -26,11 +26,39 @@
   --color-tip-bg: rgba(46, 204, 113, 0.08);
   --color-tip-border: rgba(46, 204, 113, 0.25);
   --color-tip-text: #5edd97;
-  --color-sidebar-width: 272px;
+  --color-sidebar-width: 320px;
   --color-header-height: 60px;
-  --color-right-panel-width: 220px;
+  --color-right-panel-width: 240px;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ========== LIGHT MODE ========== */
+[data-theme="light"] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fb;
+  --color-bg-tertiary: #f0f1f4;
+  --color-bg-elevated: #e8eaef;
+  --color-bg-code: #f5f6f8;
+  --color-border-primary: rgba(0, 0, 0, 0.08);
+  --color-border-secondary: rgba(0, 0, 0, 0.14);
+  --color-border-accent: rgba(255, 106, 61, 0.35);
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #4a4a5e;
+  --color-text-muted: #8888a0;
+  --color-accent: #e5552b;
+  --color-accent-hover: #d4441a;
+  --color-accent-glow: rgba(255, 106, 61, 0.12);
+  --color-accent-subtle: rgba(255, 106, 61, 0.06);
+  --color-warning-bg: rgba(255, 186, 8, 0.1);
+  --color-warning-border: rgba(255, 186, 8, 0.35);
+  --color-warning-text: #b07800;
+  --color-info-bg: rgba(56, 152, 255, 0.08);
+  --color-info-border: rgba(56, 152, 255, 0.3);
+  --color-info-text: #1a6fd4;
+  --color-tip-bg: rgba(46, 204, 113, 0.08);
+  --color-tip-border: rgba(46, 204, 113, 0.3);
+  --color-tip-text: #1a8a50;
 }
 
 /* ========== BASE RESET ========== */
@@ -56,6 +84,7 @@ body {
   line-height: 1.7;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
@@ -74,12 +103,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border-secondary);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-text-muted);
 }
 
 /* ========== TYPOGRAPHY ========== */
@@ -96,25 +125,29 @@ h6 {
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 700;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.55rem;
+  margin-top: 2rem;
 }
 
 h3 {
   font-size: 1.2rem;
+  margin-top: 1.5rem;
 }
 
 h4 {
   font-size: 1.05rem;
+  margin-top: 1rem;
 }
 
 p {
   color: var(--color-text-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
+  line-height: 1.75;
 }
 
 a {
@@ -141,17 +174,25 @@ ul,
 ol {
   color: var(--color-text-secondary);
   padding-left: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 li {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 }
 
 hr {
   border: none;
   border-top: 1px solid var(--color-border-primary);
-  margin: 2rem 0;
+  margin: 2.5rem 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-primary);
+  margin: 1rem 0;
 }
 
 /* ========== LINK STYLES FOR CONTENT ========== */
@@ -165,6 +206,15 @@ hr {
 
 .doc-content a:hover {
   text-decoration-color: var(--color-accent);
+}
+
+/* ========== TRANSITIONS FOR THEME SWITCH ========== */
+header,
+aside,
+main,
+.right-panel,
+.desktop-sidebar {
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 /* ========== ANIMATIONS ========== */

@@ -1,11 +1,16 @@
 type SectionProps = {
     title: string;
     children: React.ReactNode;
+    id?: string;
 };
 
-export default function Section({ title, children }: SectionProps) {
+export default function Section({ title, children, id }: SectionProps) {
+    // Generate an ID from the title if one isn't explicitly provided.
+    // E.g., "1. What is This Layer?" -> "what-is-this-layer"
+    const sectionId = id || title.toLowerCase().replace(/^[0-9.\s]+/, '').replace(/[\s()]+/g, "-").replace(/[^a-z0-9-]/g, "");
+
     return (
-        <section style={{ marginBottom: 40 }}>
+        <section id={sectionId} style={{ marginBottom: 40, scrollMarginTop: 100 }}>
             <h2
                 style={{
                     fontSize: "1.35rem",

@@ -5,6 +5,7 @@ import { useState } from "react";
 type CodeSnippetProps = {
     code?: string;
     language?: string;
+    hasTab?: boolean;
 };
 
 function highlightSyntax(code: string): React.ReactNode[] {
@@ -115,7 +116,7 @@ function highlightSyntax(code: string): React.ReactNode[] {
     });
 }
 
-export default function CodeSnippet({ code = "", language }: CodeSnippetProps) {
+export default function CodeSnippet({ code = "", language, hasTab }: CodeSnippetProps) {
     const [copied, setCopied] = useState<boolean>(false);
 
     const handleCopy = async () => {
@@ -131,7 +132,7 @@ export default function CodeSnippet({ code = "", language }: CodeSnippetProps) {
     return (
         <div
             style={{
-                borderRadius: 12,
+                borderRadius: hasTab ? "0 12px 12px 12px" : 12,
                 overflow: "hidden",
                 background: "var(--color-bg-code)",
                 border: "1px solid var(--color-border-primary)",
@@ -148,6 +149,7 @@ export default function CodeSnippet({ code = "", language }: CodeSnippetProps) {
                     padding: "8px 14px",
                     background: "var(--color-bg-tertiary)",
                     borderBottom: "1px solid var(--color-border-primary)",
+                    borderRadius: hasTab ? "0 12px 0 0" : "12px 12px 0 0",
                 }}
             >
                 <span

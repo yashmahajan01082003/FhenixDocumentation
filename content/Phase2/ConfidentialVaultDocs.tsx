@@ -4,14 +4,10 @@ import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
 
 export default function ConfidentialVaultDocs() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                🔐 ConfidentialVault — Private Smart Contract Explained
-            </h1>
+        <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
 
             {/* PROJECT STRUCTURE */}
-            <Section title="📁 1. Project Structure Context">
+            <Section title="1. Project Structure Context">
                 <p className="text-sm text-gray-400">
                     After initializing Hardhat, you get a sample contract (<b>Lock.sol</b>).
                     You should remove it and replace it with your own contract.
@@ -20,9 +16,9 @@ export default function ConfidentialVaultDocs() {
                 <CodeSnippet
                     code={`project-root/
 ├── contracts/
-│   └── ConfidentialVault.sol   ← YOUR MAIN CONTRACT
+│ └── ConfidentialVault.sol ← YOUR MAIN CONTRACT
 ├── ignition/
-│   └── modules/
+│ └── modules/
 ├── scripts/
 ├── test/
 ├── hardhat.config.ts
@@ -34,7 +30,7 @@ export default function ConfidentialVaultDocs() {
             </Section>
 
             {/* CLEANUP */}
-            <Section title="🧹 2. Clean Template Files (Important)">
+            <Section title="2. Clean Template Files (Important)">
                 <RuleList
                     items={[
                         "Delete contracts/Lock.sol (default sample contract)",
@@ -46,7 +42,7 @@ export default function ConfidentialVaultDocs() {
             </Section>
 
             {/* WHERE TO CREATE */}
-            <Section title="📍 3. Where to Create This Contract">
+            <Section title="3. Where to Create This Contract">
                 <RuleList
                     items={[
                         "Go to: contracts/ folder",
@@ -58,9 +54,9 @@ export default function ConfidentialVaultDocs() {
             </Section>
 
             {/* ANALOGY */}
-            <Section title="🧠 4. Imagine This First (Analogy)">
+            <Section title="4. Imagine This First (Analogy)">
                 <p>
-                    Imagine you have a magical piggy bank 🐷✨
+                    Imagine you have a magical piggy bank
                 </p>
 
                 <RuleList
@@ -78,7 +74,7 @@ export default function ConfidentialVaultDocs() {
             </Section>
 
             {/* USE CASE */}
-            <Section title="🎯 5. What This Contract Does">
+            <Section title="5. What This Contract Does">
                 <RuleList
                     items={[
                         "Stores balances in encrypted form",
@@ -90,7 +86,7 @@ export default function ConfidentialVaultDocs() {
             </Section>
 
             {/* CONTRACT CODE */}
-            <Section title="📜 6. Contract Code">
+            <Section title="6. Contract Code">
                 <CodeSnippet
                     code={`// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
@@ -98,78 +94,78 @@ pragma solidity ^0.8.28;
 import '@fhenixprotocol/cofhe-contracts/FHE.sol';
 
 contract ConfidentialVault {
-    mapping(address => euint64) private _balances;
+ mapping(address => euint64) private _balances;
 
-    function deposit(InEuint64 calldata encryptedAmount) external {
-        euint64 amount = FHE.asEuint64(encryptedAmount);
+ function deposit(InEuint64 calldata encryptedAmount) external {
+ euint64 amount = FHE.asEuint64(encryptedAmount);
 
-        _balances[msg.sender] = FHE.add(_balances[msg.sender], amount);
+ _balances[msg.sender] = FHE.add(_balances[msg.sender], amount);
 
-        FHE.allowThis(_balances[msg.sender]);
-        FHE.allowSender(_balances[msg.sender]);
-    }
+ FHE.allowThis(_balances[msg.sender]);
+ FHE.allowSender(_balances[msg.sender]);
+ }
 
-    function getBalance() public view returns (euint64) {
-        return _balances[msg.sender];
-    }
+ function getBalance() public view returns (euint64) {
+ return _balances[msg.sender];
+ }
 
-    function publishBalance(
-        euint64 ctHash,
-        uint64 plaintext,
-        bytes calldata signature
-    ) external {
-        FHE.publishDecryptResult(ctHash, plaintext, signature);
-    }
+ function publishBalance(
+ euint64 ctHash,
+ uint64 plaintext,
+ bytes calldata signature
+ ) external {
+ FHE.publishDecryptResult(ctHash, plaintext, signature);
+ }
 }`}
                 />
             </Section>
 
             {/* BREAKDOWN */}
-            <Section title="🧩 7. How It Works">
+            <Section title="7. How It Works">
 
-                <h3 className="font-semibold mt-2">🔐 Encrypted Storage</h3>
+                <h3 className="font-semibold mt-2"> Encrypted Storage</h3>
                 <CodeSnippet code={`mapping(address => euint64) private _balances;`} />
 
                 <p className="text-sm text-gray-400 mt-2">
                     Stores encrypted balances instead of normal numbers.
                 </p>
 
-                <p>👉 Like storing money inside a locked box.</p>
+                <p> Like storing money inside a locked box.</p>
 
-                <h3 className="font-semibold mt-6">📥 Deposit</h3>
+                <h3 className="font-semibold mt-6"> Deposit</h3>
                 <CodeSnippet code={`function deposit(InEuint64 calldata encryptedAmount)`} />
 
                 <p>Users send encrypted values.</p>
 
-                <p>👉 Like sending sealed envelopes.</p>
+                <p> Like sending sealed envelopes.</p>
 
                 <CodeSnippet code={`FHE.add(existingBalance, amount)`} />
 
                 <p className="text-yellow-300 mt-2">
-                    👉 Performs math without opening the data.
+                    Performs math without opening the data.
                 </p>
 
-                <h3 className="font-semibold mt-6">🔑 Permissions</h3>
+                <h3 className="font-semibold mt-6"> Permissions</h3>
                 <CodeSnippet code={`FHE.allowThis(...)
 FHE.allowSender(...)`} />
 
                 <p>Controls who can use and decrypt the data.</p>
 
-                <h3 className="font-semibold mt-6">👀 Get Balance</h3>
+                <h3 className="font-semibold mt-6"> Get Balance</h3>
                 <CodeSnippet code={`function getBalance() returns (euint64)`} />
 
                 <p className="text-yellow-300">
-                    👉 Returns encrypted value (not readable directly).
+                    Returns encrypted value (not readable directly).
                 </p>
 
-                <h3 className="font-semibold mt-6">📤 Decryption Publish</h3>
+                <h3 className="font-semibold mt-6"> Decryption Publish</h3>
                 <CodeSnippet code={`FHE.publishDecryptResult(...)`} />
 
                 <p>Used to safely reveal value with verification.</p>
             </Section>
 
             {/* FLOW */}
-            <Section title="🔄 8. Full Flow">
+            <Section title="8. Full Flow">
                 <RuleList
                     items={[
                         "Encrypt value using SDK",
@@ -182,7 +178,7 @@ FHE.allowSender(...)`} />
             </Section>
 
             {/* WHY */}
-            <Section title="🚨 9. Why This Matters">
+            <Section title="9. Why This Matters">
                 <RuleList
                     items={[
                         "Prevents public exposure of balances",
@@ -194,7 +190,7 @@ FHE.allowSender(...)`} />
             </Section>
 
             {/* FINAL */}
-            <Section title="🧠 Final Understanding">
+            <Section title="Final Understanding">
                 <p className="text-yellow-300 font-medium">
                     This is not just a vault — it is encrypted computation in action.
                 </p>

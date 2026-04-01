@@ -4,14 +4,10 @@ import CodeSnippet from "@/content/ComponentsForCode/CodeSnippet";
 
 export default function DeploymentCodeSetup() {
     return (
-        <div className="p-6 text-gray-200 bg-black min-h-screen">
-
-            <h1 className="text-2xl font-bold mb-6">
-                ⚙️ Deployment Code Setup — Smart Contract Pipeline
-            </h1>
+        <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
 
             {/* INTRO */}
-            <Section title="🚀 1. What We Are Building Here">
+            <Section title="1. What We Are Building Here">
                 <p className="text-sm text-gray-400">
                     Now we move from theory → real implementation.
                     This setup connects your smart contract project to the blockchain network.
@@ -23,7 +19,7 @@ export default function DeploymentCodeSetup() {
             </Section>
 
             {/* DIRECTORY STRUCTURE */}
-            <Section title="📁 2. Project Directory Structure">
+            <Section title="2. Project Directory Structure">
                 <p className="text-sm text-gray-400">
                     This is the standard Hardhat + deployment project layout.
                 </p>
@@ -32,13 +28,13 @@ export default function DeploymentCodeSetup() {
                     code={`deployUsingTestNet/
 │
 ├── contracts/
-│   └── ConfidentialVault.sol
+│ └── ConfidentialVault.sol
 │
 ├── scripts/
-│   └── deploy.js
+│ └── deploy.js
 │
 ├── test/
-│   └── vault.test.js
+│ └── vault.test.js
 │
 ├── hardhat.config.js
 ├── .env
@@ -57,7 +53,7 @@ export default function DeploymentCodeSetup() {
             </Section>
 
             {/* DOTENV INSTALL */}
-            <Section title="📦 3. Install dotenv (MANDATORY)">
+            <Section title="3. Install dotenv (MANDATORY)">
                 <CodeSnippet code={`npm install dotenv`} />
 
                 <RuleList
@@ -70,7 +66,7 @@ export default function DeploymentCodeSetup() {
             </Section>
 
             {/* ENV FILE */}
-            <Section title="🔐 4. Environment Variables (.env)">
+            <Section title="4. Environment Variables (.env)">
                 <p className="text-sm text-gray-400">
                     This file stores sensitive credentials needed for deployment.
                 </p>
@@ -91,7 +87,7 @@ SEPOLIA_RPC_URL=`}
             </Section>
 
             {/* HARDHAT CONFIG */}
-            <Section title="⚙️ 5. Hardhat Configuration">
+            <Section title="5. Hardhat Configuration">
                 <p className="text-sm text-gray-400">
                     Hardhat controls compilation, deployment, and plugin integration.
                 </p>
@@ -102,18 +98,18 @@ require("@cofhe/hardhat-plugin");
 require("dotenv").config();
 
 module.exports = {
-  solidity: {
-    version: "0.8.28",
-    settings: {
-      evmVersion: "cancun",
-    },
-  },
-  networks: {
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL,
-      accounts: [process.env.PRIVATE_KEY],
-    },
-  },
+ solidity: {
+ version: "0.8.28",
+ settings: {
+ evmVersion: "cancun",
+ },
+ },
+ networks: {
+ sepolia: {
+ url: process.env.SEPOLIA_RPC_URL,
+ accounts: [process.env.PRIVATE_KEY],
+ },
+ },
 };`}
                 />
 
@@ -128,7 +124,7 @@ module.exports = {
             </Section>
 
             {/* DEPLOY SCRIPT */}
-            <Section title="🚀 6. Deployment Script (scripts/deploy.js)">
+            <Section title="6. Deployment Script (scripts/deploy.js)">
                 <p className="text-sm text-gray-400">
                     This script deploys your contract to the blockchain.
                 </p>
@@ -137,18 +133,18 @@ module.exports = {
                     code={`const hre = require("hardhat");
 
 async function main() {
-    const Factory = await hre.ethers.getContractFactory("ConfidentialVault");
+ const Factory = await hre.ethers.getContractFactory("ConfidentialVault");
 
-    const contract = await Factory.deploy();
+ const contract = await Factory.deploy();
 
-    await contract.waitForDeployment();
+ await contract.waitForDeployment();
 
-    console.log("✅ Contract deployed to:", await contract.getAddress());
+ console.log("Contract deployed to:", await contract.getAddress());
 }
 
 main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
+ console.error(error);
+ process.exitCode = 1;
 });`}
                 />
 
@@ -163,7 +159,7 @@ main().catch((error) => {
             </Section>
 
             {/* COMMAND */}
-            <Section title="▶️ 7. Deployment Command">
+            <Section title="7. Deployment Command">
                 <p className="text-sm text-gray-400">
                     Run this command to deploy your contract on Sepolia testnet.
                 </p>
@@ -174,11 +170,11 @@ main().catch((error) => {
             </Section>
 
             {/* OUTPUT */}
-            <Section title="📦 8. Expected Output">
+            <Section title="8. Expected Output">
                 <CodeSnippet
                     code={`[dotenv@17.3.1] injecting env (2) from .env
 [dotenv@17.3.1] injecting env (0) from .env
-✅ Contract deployed to: 0x9b568888e69e92f92B27348fb6010Eb1057a302c`}
+ Contract deployed to: 0x9b568888e69e92f92B27348fb6010Eb1057a302c`}
                 />
 
                 <RuleList
@@ -192,7 +188,7 @@ main().catch((error) => {
             </Section>
 
             {/* FINAL INSIGHT */}
-            <Section title="🧠 9. Key Insight">
+            <Section title="9. Key Insight">
                 <p className="text-yellow-300 font-medium">
                     Deployment is not just a command — it is a full pipeline.
                 </p>

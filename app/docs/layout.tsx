@@ -1,5 +1,3 @@
-import RightPanel from "@/components/RightPanel";
-
 export default function DocsLayout({
     children,
 }: {
@@ -9,10 +7,10 @@ export default function DocsLayout({
         <div
             style={{
                 display: "flex",
-                maxWidth: 1200,
+                justifyContent: "center",
+                maxWidth: 1400,
                 margin: "0 auto",
-                padding: "32px 24px",
-                gap: 32,
+                padding: "40px 32px",
             }}
             className="docs-layout"
         >
@@ -21,30 +19,16 @@ export default function DocsLayout({
                 style={{
                     flex: 1,
                     minWidth: 0,
-                    maxWidth: 780,
+                    maxWidth: 960, // Increased max-width since Right Panel is gone
                 }}
                 className="doc-content"
             >
                 {children}
             </div>
 
-            {/* Right Panel */}
-            <div
-                style={{
-                    width: 200,
-                    flexShrink: 0,
-                }}
-                className="right-panel-wrapper"
-            >
-                <RightPanel />
-            </div>
-
             <style>{`
-                @media (max-width: 1100px) {
-                    .right-panel-wrapper { display: none !important; }
-                }
                 @media (max-width: 768px) {
-                    .docs-layout { padding: 20px 16px !important; }
+                    .docs-layout { padding: 24px 16px !important; }
                 }
             `}</style>
         </div>

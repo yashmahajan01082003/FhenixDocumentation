@@ -1,81 +1,135 @@
+"use client";
+
+import Section from "@/content/ComponentsForCode/Section";
+import RoadmapStep from "@/content/ComponentsForCode/RoadmapStep";
+
 export default function WorkshopRoadmap() {
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial", lineHeight: "1.6" }}>
-            <h1>Workshop Roadmap</h1>
-
-            <p>
-                You’ve completed Phase 0 — you now understand the problem, the breakthrough, and how Fhenix changes everything.
+        <div style={{ paddingBottom: "40px" }}>
+            <p style={{ fontSize: 15, color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 32 }}>
+                You've completed Phase 0 &mdash; you now understand the problem, the breakthrough, and how Fhenix changes everything.
+                <br />
+                Now it's time to move from <strong>understanding &rarr; building</strong>.
             </p>
 
-            <p>
-                Now it’s time to move from <b>understanding → building</b> 🚀
-            </p>
+            <Section title="Phases of Development">
+                <div style={{ marginTop: 32 }}>
+                    <RoadmapStep
+                        stepNumber="0"
+                        title="Phase 0 Completed"
+                        description="You've grasped the core concepts of Fully Homomorphic Encryption."
+                        items={[
+                            "Why privacy matters",
+                            "Problems with public ledgers",
+                            "FHE intuition",
+                            "How Fhenix works",
+                        ]}
+                    />
 
-            <h3>Phase 0 ✅ Completed</h3>
+                    <RoadmapStep
+                        stepNumber="1"
+                        title="Phase 1: Getting Started"
+                        description="Your first hands-on interaction with Fhenix."
+                        items={[
+                            "Project setup",
+                            "Fhenix client setup",
+                            "Encrypt your first value",
+                            "Understand the basic flow",
+                        ]}
+                        isActive={true}
+                    />
 
-            <ul>
-                <li>🏠 Why privacy matters</li>
-                <li>🕵️ Problems with public blockchains</li>
-                <li>🔐 FHE intuition (locked box)</li>
-                <li>⚡ How Fhenix works</li>
-            </ul>
+                    <RoadmapStep
+                        stepNumber="2"
+                        title="Phase 2: Build & Test Locally"
+                        description="Writing and validating your smart contracts on a local network."
+                        items={[
+                            "Create a contract",
+                            "Use encrypted inputs",
+                            "Run local computations",
+                            "Test everything locally",
+                        ]}
+                    />
 
-            <h3>Phase 1: Getting Started ⚡</h3>
+                    <RoadmapStep
+                        stepNumber="3"
+                        title="Phase 3: Deploy to Testnet"
+                        description="Taking your application to the public Sepolia testnet."
+                        items={[
+                            "Deploy your contract",
+                            "Connect to Sepolia",
+                            "Verify deployment",
+                        ]}
+                    />
 
-            <p>
-                Your first hands-on interaction with Fhenix.
-            </p>
+                    <RoadmapStep
+                        stepNumber="4"
+                        title="Phase 4: Frontend + Wallet"
+                        description="Connecting users to your confidential smart contract via Next.js."
+                        items={[
+                            "Build UI (Next.js)",
+                            "Connect wallet",
+                            "Send encrypted inputs",
+                            "Read & decrypt results",
+                        ]}
+                        isLast={true}
+                    />
+                </div>
+            </Section>
 
-            <ul>
-                <li>🛠️ Project setup</li>
-                <li>🔌 Fhenix client setup</li>
-                <li>🔐 Encrypt your first value</li>
-                <li>⚙️ Understand the basic flow</li>
-            </ul>
+            <Section title="Workshop Goals">
+                <div style={{
+                    background: "linear-gradient(145deg, var(--color-bg-secondary), var(--color-bg-primary))",
+                    border: "1px solid var(--color-border-primary)",
+                    borderRadius: 16,
+                    padding: 24,
+                    marginTop: 16,
+                }}>
+                    <p style={{ margin: 0, marginBottom: 16, color: "var(--color-text-primary)" }}>
+                        By the end of this workshop, you will have:
+                    </p>
 
-            <h3>Phase 2: Build & Test Locally 🧪</h3>
+                    <ul style={{ margin: 0, paddingLeft: 20, color: "var(--color-text-secondary)" }}>
+                        <li style={{ marginBottom: 8 }}>A working Fhenix smart contract</li>
+                        <li style={{ marginBottom: 8 }}>Deployed on testnet</li>
+                        <li style={{ marginBottom: 0 }}>A full frontend interacting with it</li>
+                    </ul>
 
-            <ul>
-                <li>📜 Create a contract</li>
-                <li>🔐 Use encrypted inputs</li>
-                <li>⚙️ Run local computations</li>
-                <li>🧪 Test everything locally</li>
-            </ul>
+                    <div style={{
+                        marginTop: 24,
+                        padding: "16px 20px",
+                        background: "var(--color-accent-subtle)",
+                        borderRadius: 12,
+                        borderLeft: "4px solid var(--color-accent)",
+                        color: "var(--color-accent)",
+                        fontWeight: 600,
+                        fontStyle: "italic",
+                        fontSize: 15,
+                    }}>
+                        "From idea &rarr; to working encrypted application."
+                    </div>
+                </div>
 
-            <h3>Phase 3: Deploy to Testnet 🌐</h3>
-
-            <ul>
-                <li>🚀 Deploy your contract</li>
-                <li>🔗 Connect to Sepolia</li>
-                <li>✅ Verify deployment</li>
-            </ul>
-
-            <h3>Phase 4: Frontend + Wallet 💻</h3>
-
-            <ul>
-                <li>🖥️ Build UI (Next.js)</li>
-                <li>👛 Connect wallet</li>
-                <li>🔁 Send encrypted inputs</li>
-                <li>📦 Read & decrypt results</li>
-            </ul>
-
-            <p>
-                By the end of this workshop, you will have:
-            </p>
-
-            <ul>
-                <li>✅ A working Fhenix smart contract</li>
-                <li>✅ Deployed on testnet</li>
-                <li>✅ A full frontend interacting with it</li>
-            </ul>
-
-            <p style={{ marginTop: "20px", fontStyle: "italic", fontWeight: "bold" }}>
-                “From idea → to working encrypted application.”
-            </p>
-
-            <button style={{ marginTop: "10px" }}>
-                Start Phase 1
-            </button>
+                <div style={{ marginTop: 32, display: "flex", justifyContent: "flex-end" }}>
+                    <button style={{
+                        padding: "12px 24px",
+                        background: "var(--color-accent)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 10,
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        boxShadow: "0 4px 14px rgba(255, 106, 61, 0.3)",
+                        transition: "transform 0.2s",
+                    }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+                    >
+                        Start Phase 1
+                    </button>
+                </div>
+            </Section>
         </div>
     );
 }
