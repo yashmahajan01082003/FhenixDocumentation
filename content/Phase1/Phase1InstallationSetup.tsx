@@ -175,20 +175,6 @@ export default config;`}
                 />
             </Section>
 
-            {/* SINGLE COMMAND */}
-            <Section title="⚡ 7. Single Command Setup (Optional)">
-                <p className="text-sm text-gray-400 mb-2">
-                    Run this command to execute the full setup in one go:
-                </p>
-
-                <CodeSnippet
-                    code={`npm init -y && npm install --save-dev hardhat@^2.22.3 @nomicfoundation/hardhat-toolbox@^6.1.2 typescript@^6.0.2 ts-node@^10.9.2 && npm install @cofhe/hardhat-plugin@^0.4.0 @cofhe/sdk@0.4.0 @fhenixprotocol/cofhe-contracts@0.1.0 && npx hardhat`}
-                />
-
-                <p className="text-sm text-gray-400 mt-2">
-                    Equivalent to running all setup steps manually in sequence.
-                </p>
-            </Section>
 
         </div>
     );

@@ -9,6 +9,14 @@ import Phase1SingleCommandSetup from "@/content/Phase1/Phase1SingleCommandSetup"
 import ConfidentialVaultDocs from "@/content/Phase2/ConfidentialVaultDocs";
 import CompileFlowDocs from "@/content/Phase2/CompileFlowDocs";
 import TestingDocumentation from "@/content/Phase2/TestingDocumentation";
+import DeploymentIntro from "@/content/Phase3/DeploymentIntro";
+import DeploymentToolsDeepDive from "@/content/Phase3/DeploymentToolsDeepDive";
+import DeploymentCodeSetup from "@/content/Phase3/DeploymentSetup";
+import DappSetup from "@/content/Phase4/DappSetup";
+import FrontendConfigDocs from "@/content/Phase4/FrontendConfigDocs";
+import CofheServiceDocs from "@/content/Phase4/CofheServiceDocs";
+import ReactUIDocs from "@/content/Phase4/ReactUIDocs";
+import CofheRunOutput from "@/content/Phase4/CofheRunOutput";
 
 export const docsConfig = [
     {
@@ -100,21 +108,57 @@ export const docsConfig = [
         title: "Deploying Your First Contract",
         items: [
             {
-                slug: "first-smart-contract",
+                slug: "deployment-intro",
                 title: "What is Deployment?",
-                component: ConfidentialVaultDocs,
+                component: DeploymentIntro,
                 rightPanel: ["Encrypt", "Client"]
             },
             {
-                slug: "compilation-of-contract",
-                title: "Sepolia Testnets",
-                component: CompileFlowDocs,
+                slug: "deployment-tools",
+                title: "Tools Needed For Deployment",
+                component: DeploymentToolsDeepDive,
                 rightPanel: ["Encrypt", "Client"]
             },
             {
-                slug: "common-errors",
-                title: "Deployment",
-                component: TestingDocumentation,
+                slug: "deployment-code-setup",
+                title: "Deployment Code Setup",
+                component: DeploymentCodeSetup,
+                rightPanel: ["Encrypt", "Client"]
+            }
+        ]
+    },
+    {
+        phase: "phase-4",
+        title: "Connecting Smart Contract to FrontEnd",
+        items: [
+            {
+                slug: "dapp-intro-setup",
+                title: "Setup for Dapp",
+                component: DappSetup,
+                rightPanel: ["Encrypt", "Client"]
+            },
+            {
+                slug: "frontend-config",
+                title: "Add Keys to Connect Frontend to Blockchain",
+                component: FrontendConfigDocs,
+                rightPanel: ["Encrypt", "Client"]
+            },
+            {
+                slug: "user-friendly-cofhe-service",
+                title: "User-Friendly Cofhe Service",
+                component: CofheServiceDocs,
+                rightPanel: ["Encrypt", "Client"]
+            },
+            {
+                slug: "react-ui-layer",
+                title: "React UI Layer — Connecting User to Blockchain",
+                component: ReactUIDocs,
+                rightPanel: ["Encrypt", "Client"]
+            },
+            {
+                slug: "cofhe-run-output",
+                title: "Run & Output",
+                component: CofheRunOutput,
                 rightPanel: ["Encrypt", "Client"]
             }
         ]
