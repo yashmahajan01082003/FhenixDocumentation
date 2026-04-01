@@ -1,4 +1,26 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export default function WhyPrivacyMatters() {
+    const iframeRef = useRef(null);
+    const [loadIframe, setLoadIframe] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setLoadIframe(true);
+                observer.disconnect();
+            }
+        });
+
+        if (iframeRef.current) {
+            observer.observe(iframeRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <div style={{ padding: "20px", fontFamily: "Arial", lineHeight: "1.6" }}>
             <h1>Why Privacy Matters</h1>
@@ -6,13 +28,22 @@ export default function WhyPrivacyMatters() {
             <p>
                 Imagine you live in a house made completely of glass 🏠✨
             </p>
-            <iframe
-                src="/glass.html"
-                title="3D glass house"
-                width="100%"
-                height="500px"
-                style={{ border: "none", marginBottom: "20px" }}
-            />
+
+            <div ref={iframeRef}>
+                {loadIframe ? (
+                    <iframe
+                        src="/glass.html"
+                        title="3D glass house"
+                        width="100%"
+                        height="500px"
+                        style={{ border: "none", marginBottom: "20px" }}
+                    />
+                ) : (
+                    <div style={{ height: "500px", marginBottom: "20px" }}>
+                        Loading 3D glass house...
+                    </div>
+                )}
+            </div>
 
             <p>
                 The walls are see-through… so everyone outside can watch you all the time 👀

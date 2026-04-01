@@ -11,6 +11,21 @@ export default function Phase1InstallationSetup() {
                 🚀 Phase 1 — Hardhat + CoFHE TypeScript Setup (Strict Flow)
             </h1>
 
+            {/* PREREQUISITE */}
+            <Section title="🧱 0. Prerequisite (MANDATORY)">
+                <RuleList
+                    items={[
+                        "Install Node.js LTS (version 22 or higher)",
+                        "Do NOT use Node 16 or 18",
+                        "Use only stable LTS builds (no experimental versions)",
+                    ]}
+                />
+
+                <p className="text-sm text-gray-400 mt-2">
+                    Hardhat and CoFHE depend on modern Node.js runtime behavior for deterministic execution.
+                </p>
+            </Section>
+
             {/* STEP 1 */}
             <Section title="🧱 1. Initialize Node Project">
                 <CodeBlock file="terminal" code={`npm init -y`} />
@@ -34,9 +49,9 @@ export default function Phase1InstallationSetup() {
                 <RuleList
                     items={[
                         "hardhat → core Ethereum development environment",
-                        "hardhat-toolbox → ethers v6, chai, testing utilities",
-                        "typescript → typed scripting environment",
-                        "ts-node → execute TS directly without compilation",
+                        "hardhat-toolbox → provides ethers v6, chai, testing utilities",
+                        "typescript → enables typed scripting environment",
+                        "ts-node → runs TypeScript files without manual compilation",
                     ]}
                 />
 
@@ -56,14 +71,30 @@ export default function Phase1InstallationSetup() {
 
                 <RuleList
                     items={[
-                        "@cofhe/hardhat-plugin → injects FHE execution into Hardhat",
-                        "@cofhe/sdk → client-side encryption + permit handling",
-                        "@fhenixprotocol/cofhe-contracts → encrypted primitives for Solidity",
+                        "@cofhe/hardhat-plugin → integrates Fully Homomorphic Encryption (FHE) into the Hardhat workflow",
+                        "It modifies the compile, deploy, and execution pipeline so smart contracts can operate on encrypted data",
+                        "It also provides a mock FHE runtime locally, allowing encrypted logic to be tested without a real network",
+
+                        "@cofhe/sdk → acts as the client-side bridge for encryption workflows",
+                        "It is responsible for encrypting inputs before sending them to contracts",
+                        "It manages permissions (permits) required to decrypt results securely",
+                        "It ensures that sensitive data is never exposed in plaintext during interaction",
+
+                        "@fhenixprotocol/cofhe-contracts → provides Solidity-level encrypted primitives",
+                        "These include encrypted data types (like encrypted integers and booleans)",
+                        "It enables writing smart contracts that perform computation directly on encrypted values",
+                        "It ensures compatibility with the CoFHE execution model used by the plugin",
                     ]}
                 />
 
+                <p className="text-sm text-gray-400 mt-2">
+                    These packages together enable a full encrypted execution pipeline:
+                    inputs are encrypted on the client, processed securely inside smart contracts,
+                    and only decrypted when explicitly permitted.
+                </p>
+
                 <p className="text-sm text-gray-400">
-                    No new folders appear — dependencies are added inside node_modules.
+                    All dependencies are installed inside <b>node_modules</b> and automatically linked into the Hardhat environment.
                 </p>
             </Section>
 
@@ -99,7 +130,7 @@ export default function Phase1InstallationSetup() {
             </Section>
 
             {/* CONFIG */}
-            <Section title="⚙️ 5. Hardhat Configuration (MANDATORY)">
+            <Section title="⚙️ 5. Hardhat Configuration">
                 <p className="text-sm text-gray-400 mb-2">
                     📄 File: hardhat.config.ts
                 </p>
@@ -122,85 +153,43 @@ export default config;`}
 
                 <RuleList
                     items={[
-                        "Plugin order defines execution order",
-                        "CoFHE plugin injects encrypted execution runtime",
-                        "Toolbox provides ethers v6 + testing utilities",
-                        "Cancun EVM ensures compatibility with latest opcodes",
-                    ]}
-                />
-            </Section>
-
-            {/* PRINCIPLES */}
-            <Section title="🧠 6. System Principles">
-                <RuleList
-                    items={[
-                        "Deterministic setup > flexible setup",
-                        "All versions must remain locked",
-                        "Execution must be reproducible across machines",
-                        "Cryptographic systems require strict environment control",
-                    ]}
-                />
-            </Section>
-
-            {/* FAILURE */}
-            <Section title="🧯 7. Failure Modes">
-                <RuleList
-                    items={[
-                        "Changing versions breaks plugin compatibility",
-                        "Incorrect plugin order breaks execution pipeline",
-                        "Skipping TypeScript setup breaks scripts",
-                        "Unpinned dependencies cause inconsistent builds",
+                        "CoFHE plugin must be loaded to enable encrypted execution",
+                        "Toolbox provides ethers v6 and testing utilities",
+                        "Solidity version must match compiler expectations",
+                        "EVM Cancun ensures compatibility with latest features",
                     ]}
                 />
             </Section>
 
             {/* OUTCOME */}
-            <Section title="🚀 8. Outcome">
+            <Section title="🚀 6. Outcome">
                 <RuleList
                     items={[
-                        "Hardhat TypeScript project initialized",
-                        "CoFHE plugin integrated",
+                        "Node.js project initialized",
+                        "Hardhat TypeScript project created",
+                        "CoFHE plugin installed and configured",
                         "Fhenix SDK installed",
-                        "Encrypted smart contract environment ready",
-                        "Deterministic execution ensured",
+                        "Project structure generated",
+                        "Ready for development",
                     ]}
                 />
             </Section>
 
-            {/* 🆕 SINGLE COMMAND SETUP MOVED TO LAST */}
-            <Section title="⚡ Single Command Setup (Recommended)">
+            {/* SINGLE COMMAND */}
+            <Section title="⚡ 7. Single Command Setup (Optional)">
                 <p className="text-sm text-gray-400 mb-2">
-                    Run this single PowerShell command to fully bootstrap everything in one go:
+                    Run this command to execute the full setup in one go:
                 </p>
 
                 <CodeSnippet
                     code={`npm init -y && npm install --save-dev hardhat@^2.22.3 @nomicfoundation/hardhat-toolbox@^6.1.2 typescript@^6.0.2 ts-node@^10.9.2 && npm install @cofhe/hardhat-plugin@^0.4.0 @cofhe/sdk@0.4.0 @fhenixprotocol/cofhe-contracts@0.1.0 && npx hardhat`}
                 />
 
-                <RuleList
-                    items={[
-                        "Initializes Node project",
-                        "Installs Hardhat + TypeScript tooling",
-                        "Installs CoFHE + Fhenix dependencies",
-                        "Launches Hardhat setup wizard automatically",
-                    ]}
-                />
-
                 <p className="text-sm text-gray-400 mt-2">
-                    Equivalent to running all installation steps manually in sequence.
+                    Equivalent to running all setup steps manually in sequence.
                 </p>
             </Section>
 
-            {/* META */}
-            <Section title="🧠 FINAL META PRINCIPLE">
-                <p className="text-yellow-300 font-medium">
-                    This is not installation — it is deterministic environment construction.
-                </p>
-
-                <p className="text-sm text-gray-400 mt-2">
-                    Each step transforms the system state in a controlled, reproducible way.
-                </p>
-            </Section>
         </div>
     );
 }
