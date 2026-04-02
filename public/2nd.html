@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>FHE: The Locked Box Machine</title>
+        <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+        <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+        <style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Courier New',monospace}
+
+/* ── TOP HUD ── */
+#hud-top{
+  position:fixed;top:0;left:0;width:100%;z-index:300;
+  pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:22px;gap:6px;
+}
+.hud-title{
+  font-size:26px;font-weight:900;letter-spacing:7px;color:#00ffcc;
+  text-transform:uppercase;
+  text-shadow:0 0 24px #00ffcc,0 0 60px #00ffcc66,0 0 100px #00ffcc33;
+  animation:pulse-title 3s ease-in-out infinite;
+}
+@keyframes pulse-title{0%,100%{text-shadow:0 0 24px #00ffcc,0 0 60px #00ffcc66}
+  50%{text-shadow:0 0 40px #00ffcc,0 0 90px #00ffcc88,0 0 140px #00ffcc44}}
+.hud-sub{
+  font-size:14px;letter-spacing:3px;color:rgba(170,255,220,0.6);
+}
+
+/* ── SCROLL ZOOM HINT ── */
+#zoom-hint{
+  position:fixed;top:50%;right:20px;transform:translateY(-50%);
+  z-index:300;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.zoom-track{
+  width:6px;height:80px;
+  background:rgba(0,255,204,0.12);
+  border-radius:3px;border:1px solid rgba(0,255,204,0.25);
+  position:relative;overflow:hidden;
+}
+.zoom-thumb{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,#00ffcc,#0088aa);
+  border-radius:3px;
+  transition:height 0.15s ease;
+}
+.zoom-label{font-size:9px;letter-spacing:2px;color:rgba(0,255,204,0.4);writing-mode:vertical-rl;text-orientation:mixed}
+
+/* ── CONTROLS ── */
+#controls-hint{
+  position:fixed;top:110px;right:22px;z-index:300;
+  pointer-events:none;
+  font-size:11px;color:rgba(0,255,204,0.35);
+  letter-spacing:1.5px;line-height:2.1;text-align:right;
+}
+
+/* ── PHASE BAR ── */
+#phase-bar{
+  position:fixed;bottom:0;left:0;width:100%;z-index:300;
+  pointer-events:none;
+  display:flex;justify-content:space-around;align-items:stretch;
+  background:rgba(0,0,0,0.9);
+  border-top:1px solid rgba(0,255,204,0.18);
+  padding:14px 30px;gap:16px;
+}
+.phase-card{
+  flex:1;text-align:center;border-radius:10px;
+  padding:12px 20px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  transition:all 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.phase-card.active{
+  border-color:var(--c);
+  background:rgba(0,0,0,0.4);
+  box-shadow:0 0 28px var(--c),0 0 60px color-mix(in srgb,var(--c) 30%,transparent),
+             inset 0 0 24px rgba(0,0,0,0.7);
+  transform:translateY(-2px);
+}
+.phase-card .num{font-size:28px;font-weight:900;color:var(--c);line-height:1}
+.phase-card .ph{font-size:14px;letter-spacing:4px;color:#fff;margin:5px 0;text-transform:uppercase;font-weight:bold}
+.phase-card .desc{font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,0.42);line-height:1.6}
+
+/* ── TOOLTIP OVERLAY ── */
+#tooltip{
+  position:fixed;left:50%;bottom:110px;transform:translateX(-50%);
+  z-index:300;pointer-events:none;
+  background:rgba(0,0,0,0.85);
+  border:1px solid rgba(0,255,204,0.4);
+  border-radius:12px;padding:14px 28px;
+  font-size:13px;letter-spacing:2px;color:#00ffcc;
+  text-align:center;line-height:1.8;
+  opacity:0;transition:opacity 0.5s ease;
+  box-shadow:0 0 30px rgba(0,255,204,0.2);
+  max-width:480px;
+}
+#tooltip.show{opacity:1}
+
+/* ── SCANLINE OVERLAY ── */
+#scanlines{
+  position:fixed;inset:0;z-index:250;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
+}
+
+/* ── CORNER DECORATIONS ── */
+.corner{position:fixed;z-index:280;pointer-events:none;width:50px;height:50px}
+.corner svg{width:100%;height:100%}
+.corner.tl{top:16px;left:16px}.corner.tr{top:16px;right:16px;transform:scaleX(-1)}
+.corner.bl{bottom:90px;left:16px;transform:scaleY(-1)}.corner.br{bottom:90px;right:16px;transform:scale(-1)}
+        </style>
+    </head>
+    <body>
+        <!-- scanlines -->
+        <div id="scanlines"></div>
+        <!-- corner decorations -->
+        <div class="corner tl">
+            <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline
+                    points="0,30 0,0 30,0"
+                    stroke="#00ffcc"
+                    stroke-width="2"
+                    opacity="0.5"
+                />
+                <polyline
+                    points="0,18 0,0 18,0"
+                    stroke="#00ffcc"
+                    stroke-width="1"
+                    opacity="0.3"
+                />
+            </svg>
+        </div>
+        <div class="corner tr">
+            <svg viewBox="0 0 50 50" fill="none">
+                <polyline
+                    points="0,30 0,0 30,0"
+                    stroke="#00ffcc"
+                    stroke-width="2"
+                    opacity="0.5"
+                />
+                <polyline
+                    points="0,18 0,0 18,0"
+                    stroke="#00ffcc"
+                    stroke-width="1"
+                    opacity="0.3"
+                />
+            </svg>
+        </div>
+        <div class="corner bl">
+            <svg viewBox="0 0 50 50" fill="none">
+                <polyline
+                    points="0,30 0,0 30,0"
+                    stroke="#00ffcc"
+                    stroke-width="2"
+                    opacity="0.5"
+                />
+                <polyline
+                    points="0,18 0,0 18,0"
+                    stroke="#00ffcc"
+                    stroke-width="1"
+                    opacity="0.3"
+                />
+            </svg>
+        </div>
+        <div class="corner br">
+            <svg viewBox="0 0 50 50" fill="none">
+                <polyline
+                    points="0,30 0,0 30,0"
+                    stroke="#00ffcc"
+                    stroke-width="2"
+                    opacity="0.5"
+                />
+                <polyline
+                    points="0,18 0,0 18,0"
+                    stroke="#00ffcc"
+                    stroke-width="1"
+                    opacity="0.3"
+                />
+            </svg>
+        </div>
+        <!-- TOP HUD -->
+        <div id="hud-top">
+            <div class="hud-title">⬡ Fully Homomorphic Encryption</div>
+            <div class="hud-sub">"Compute on data without ever seeing it"</div>
+        </div>
+        <!-- ZOOM INDICATOR -->
+        <div id="zoom-hint">
+            <span class="zoom-label">ZOOM</span>
+            <div class="zoom-track">
+                <div class="zoom-thumb" id="zoom-thumb" style="height:40%"></div>
+            </div>
+            <span class="zoom-label">SCROLL</span>
+        </div>
+        <!-- CONTROLS -->
+        <div id="controls-hint">
+            WASD · MOVE
+            <br>
+            DRAG · LOOK
+            <br>
+            SCROLL · ZOOM
+            <br>
+            ←→ · ORBIT
+        </div>
+        <!-- TOOLTIP -->
+        <div id="tooltip" id="tooltip"></div>
+        <!-- PHASE BAR -->
+        <div id="phase-bar">
+            <div class="phase-card active" id="pc1" style="--c:#4488ff">
+                <div class="num">①</div>
+                <div class="ph">LOCK</div>
+                <div class="desc">Your data sealed in a padlocked box
+                    <br>Only YOU hold the key
+                </div>
+            </div>
+            <div class="phase-card" id="pc2" style="--c:#00ffcc">
+                <div class="num">②</div>
+                <div class="ph">COMPUTE</div>
+                <div class="desc">Machine processes the sealed box
+                    <br>Box is NEVER opened
+                </div>
+            </div>
+            <div class="phase-card" id="pc3" style="--c:#ff44aa">
+                <div class="num">③</div>
+                <div class="ph">UNLOCK</div>
+                <div class="desc">Result returned — still sealed
+                    <br>Only your key reveals the answer
+                </div>
+            </div>
+        </div>
+        <!-- ===================================================================
+     3D SCENE
+=================================================================== -->
+        <a-scene fog="type: exponential; color: #010a18; density: 0.007" renderer="antialias: true; colorManagement: true" vr-mode-ui="enabled: false">
+            <a-entity environment="preset: starry; ground: none; lighting: none; horizonColor: #000820; fog: 0"></a-entity>
+            <!-- LIGHTS -->
+            <a-light type="ambient" color="#0a1525" intensity="4"></a-light>
+            <a-light
+                type="point"
+                position="-22 10 10"
+                color="#1155ff"
+                intensity="5"
+                distance="55"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="point"
+                position=" 22 10 10"
+                color="#ff0077"
+                intensity="4.5"
+                distance="55"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="point"
+                position="  0 15  8"
+                color="#00ffcc"
+                intensity="4"
+                distance="50"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="point"
+                position="  0  0  5"
+                color="#ffffff"
+                intensity="1.5"
+                distance="30"
+                decay="2"
+            ></a-light>
+            <a-light
+                type="directional"
+                position="2 8 12"
+                intensity="1.2"
+                color="#cce8ff"
+            ></a-light>
+            <!-- CAMERA RIG with scroll-zoom JS -->
+            <a-entity id="rig" position="0 5 32">
+                <a-entity
+                    id="cam"
+                    camera
+                    look-controls
+                    wasd-controls
+                    fov="72"
+                >
+                    <a-cursor color="#00ffcc" scale="0.25 0.25 0.25" material="color:#00ffcc;shader:flat;opacity:0.9;transparent:true"></a-cursor>
+                </a-entity>
+            </a-entity>
+            <!-- ═══════════════════ FLOOR ═══════════════════ -->
+            <a-plane
+                rotation="-90 0 0"
+                width="200"
+                height="200"
+                position="0 -6 0"
+                material="color:#010a14"
+            ></a-plane>
+            <a-plane
+                rotation="-90 0 0"
+                width="200"
+                height="200"
+                position="0 -5.95 0"
+                material="src:https://cdn.aframe.io/a-grid.png;color:#002244;opacity:0.2;transparent:true"
+            ></a-plane>
+            <!-- floor neon strip -->
+            <a-plane
+                rotation="-90 0 0"
+                width="60"
+                height="0.22"
+                position="0 -5.9 4"
+                material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.4;transparent:true"
+                animation="property:material.opacity;from:0.4;to:0.06;direction:alternate;dur:2200;loop:true"
+            ></a-plane>
+            <!-- side floor accents -->
+            <a-plane
+                rotation="-90 0 0"
+                width="0.14"
+                height="60"
+                position="-15 -5.9 4"
+                material="color:#0044ff;shader:flat;emissive:#0044ff;emissiveIntensity:1;opacity:0.3;transparent:true"
+            ></a-plane>
+            <a-plane
+                rotation="-90 0 0"
+                width="0.14"
+                height="60"
+                position="15 -5.9 4"
+                material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1;opacity:0.3;transparent:true"
+            ></a-plane>
+            <!-- ═══════════════════ PIPELINE ═══════════════════ -->
+            <!-- left pipeline -->
+            <a-cylinder
+                position="-10.5 2 4"
+                rotation="0 0 90"
+                radius="0.22"
+                height="13"
+                material="color:#1155ff;shader:flat;emissive:#0033bb;emissiveIntensity:1;opacity:0.45;transparent:true"
+                animation="property:material.opacity;from:0.45;to:0.08;direction:alternate;dur:1500;loop:true"
+            ></a-cylinder>
+            <!-- left pipe glow shell -->
+            <a-cylinder
+                position="-10.5 2 4"
+                rotation="0 0 90"
+                radius="0.42"
+                height="13"
+                material="color:#0044ff;opacity:0.06;transparent:true;shader:flat"
+            ></a-cylinder>
+            <!-- left arrowhead -->
+            <a-cone
+                radius-bottom="0.65"
+                radius-top="0"
+                height="1.2"
+                position="-4.5 2 4"
+                rotation="0 0 -90"
+                material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1;opacity:0.9;transparent:true"
+            ></a-cone>
+            <!-- right pipeline -->
+            <a-cylinder
+                position="10.5 2 4"
+                rotation="0 0 90"
+                radius="0.22"
+                height="13"
+                material="color:#ff0077;shader:flat;emissive:#cc0055;emissiveIntensity:1;opacity:0.45;transparent:true"
+                animation="property:material.opacity;from:0.45;to:0.08;direction:alternate;dur:1800;loop:true"
+            ></a-cylinder>
+            <a-cylinder
+                position="10.5 2 4"
+                rotation="0 0 90"
+                radius="0.42"
+                height="13"
+                material="color:#ff0055;opacity:0.06;transparent:true;shader:flat"
+            ></a-cylinder>
+            <a-cone
+                radius-bottom="0.65"
+                radius-top="0"
+                height="1.2"
+                position="16.8 2 4"
+                rotation="0 0 -90"
+                material="color:#ff44aa;shader:flat;emissive:#ff44aa;emissiveIntensity:1;opacity:0.9;transparent:true"
+            ></a-cone>
+            <!-- pipeline labels forward -->
+            <a-text
+                value="DATA FLOWS LOCKED →"
+                position="-10.5 3.8 6"
+                align="center"
+                color="#4488ff"
+                width="18"
+                font="exo2bold"
+                material="shader:flat;emissive:#3366cc;emissiveIntensity:1"
+            ></a-text>
+            <a-text
+                value="RESULT FLOWS LOCKED →"
+                position="10.5 3.8 6"
+                align="center"
+                color="#ff44aa"
+                width="18"
+                font="exo2bold"
+                material="shader:flat;emissive:#cc2255;emissiveIntensity:1"
+            ></a-text>
+            <!-- ANIMATED DATA PACKETS on pipeline (3 staggered) -->
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear" animation__spin="property:rotation;to:0 0 360;loop:true;dur:1000;easing:linear">
+                <a-box
+                    width="0.9"
+                    height="0.9"
+                    depth="0.9"
+                    material="color:#00aaff;wireframe:true;emissive:#0077ff;emissiveIntensity:1;opacity:0.9;transparent:true"
+                ></a-box>
+                <a-box
+                    width="0.45"
+                    height="0.45"
+                    depth="0.45"
+                    material="color:#fff;opacity:0.7;transparent:true;shader:flat"
+                ></a-box>
+            </a-entity>
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear;delay:2333" animation__spin="property:rotation;to:0 0 360;loop:true;dur:1100;easing:linear">
+                <a-box
+                    width="0.7"
+                    height="0.7"
+                    depth="0.7"
+                    material="color:#00ffcc;wireframe:true;emissive:#00cc88;emissiveIntensity:1;opacity:0.85;transparent:true"
+                ></a-box>
+            </a-entity>
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear;delay:4666" animation__spin="property:rotation;to:360 0 360;loop:true;dur:900;easing:linear">
+                <a-box
+                    width="0.55"
+                    height="0.55"
+                    depth="0.55"
+                    material="color:#ff44aa;wireframe:true;emissive:#ff0077;emissiveIntensity:1;opacity:0.8;transparent:true"
+                ></a-box>
+            </a-entity>
+            <!-- floating binary rain (decorative) -->
+            <!-- col 1 -->
+            <a-text
+                value="0&#10;1&#10;0&#10;0&#10;1&#10;1&#10;0&#10;1"
+                position="-26 8 -5"
+                align="center"
+                color="#00ffcc"
+                width="3"
+                font="monoid"
+                opacity="0.15"
+                animation="property:position;from:-26 8 -5;to:-26 -8 -5;loop:true;dur:6000;easing:linear"
+            ></a-text>
+            <a-text
+                value="1&#10;0&#10;1&#10;1&#10;0&#10;0&#10;1&#10;0"
+                position="-22 12 -5"
+                align="center"
+                color="#0055ff"
+                width="3"
+                font="monoid"
+                opacity="0.12"
+                animation="property:position;from:-22 12 -5;to:-22 -8 -5;loop:true;dur:7500;easing:linear;delay:1500"
+            ></a-text>
+            <a-text
+                value="0&#10;1&#10;1&#10;0&#10;1&#10;0&#10;1&#10;1"
+                position="22 10 -5"
+                align="center"
+                color="#ff0077"
+                width="3"
+                font="monoid"
+                opacity="0.12"
+                animation="property:position;from:22 10 -5;to:22 -8 -5;loop:true;dur:6500;easing:linear;delay:800"
+            ></a-text>
+            <a-text
+                value="1&#10;1&#10;0&#10;1&#10;0&#10;1&#10;0&#10;0"
+                position="26 14 -5"
+                align="center"
+                color="#00ffcc"
+                width="3"
+                font="monoid"
+                opacity="0.1"
+                animation="property:position;from:26 14 -5;to:26 -8 -5;loop:true;dur:8000;easing:linear;delay:3000"
+            ></a-text>
+            <!-- ═══════════════════ STATION 1 — LOCK ═══════════════════ -->
+            <a-entity id="s1" position="-17 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="4.5"
+                    height="0.35"
+                    position="0 -5.35 0"
+                    material="color:#001133;metalness:0.95;roughness:0.1;emissive:#002266;emissiveIntensity:0.4"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="4.5"
+                    height="0.12"
+                    position="0 -5 0"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1;opacity:0.55;transparent:true"
+                    animation="property:material.opacity;from:0.55;to:0.1;direction:alternate;dur:1800;loop:true"
+                ></a-cylinder>
+                <!-- platform ring detail -->
+                <a-torus
+                    radius="4.5"
+                    radius-tubular="0.04"
+                    rotation="90 0 0"
+                    position="0 -4.88 0"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1;opacity:0.3;transparent:true"
+                ></a-torus>
+                <a-torus
+                    radius="3.5"
+                    radius-tubular="0.03"
+                    rotation="90 0 0"
+                    position="0 -4.88 0"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1;opacity:0.2;transparent:true"
+                ></a-torus>
+                <!-- CHEST — floating -->
+                <a-entity animation="property:position;from:0 0 0;to:0 0.7 0;direction:alternate;dur:2500;loop:true;easing:easeInOutSine">
+                    <!-- base -->
+                    <a-box
+                        width="5"
+                        height="3.5"
+                        depth="3.8"
+                        position="0 -1.75 0"
+                        material="color:#1a3a6e;metalness:0.92;roughness:0.12;emissive:#001a55;emissiveIntensity:0.7"
+                    ></a-box>
+                    <!-- lid -->
+                    <a-box
+                        width="5"
+                        height="1.5"
+                        depth="3.8"
+                        position="0 0.75 0"
+                        material="color:#1e4080;metalness:0.92;roughness:0.12;emissive:#002888;emissiveIntensity:0.7"
+                    ></a-box>
+                    <!-- seam glow -->
+                    <a-box
+                        width="5.18"
+                        height="0.2"
+                        depth="3.9"
+                        position="0 0.02 0"
+                        material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                    ></a-box>
+                    <!-- chest stripes (decoration) -->
+                    <a-box
+                        width="5.02"
+                        height="0.08"
+                        depth="3.82"
+                        position="0 -0.9 0"
+                        material="color:#2255aa;shader:flat;emissive:#2255aa;emissiveIntensity:0.8"
+                    ></a-box>
+                    <a-box
+                        width="5.02"
+                        height="0.08"
+                        depth="3.82"
+                        position="0 -1.8 0"
+                        material="color:#2255aa;shader:flat;emissive:#2255aa;emissiveIntensity:0.8"
+                    ></a-box>
+                    <!-- corner bolts -->
+                    <a-sphere radius="0.16" position=" 2.4  0.75  1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4  0.75  1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4  0.75 -1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4  0.75 -1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4 -1.75  1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4 -1.75  1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4 -1.75 -1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4 -1.75 -1.8" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <!-- PADLOCK body -->
+                    <a-box
+                        width="1.2"
+                        height="1.0"
+                        depth="0.6"
+                        position="0 0.35 1.96"
+                        material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:0.9"
+                    ></a-box>
+                    <!-- padlock shackle -->
+                    <a-torus
+                        radius="0.46"
+                        radius-tubular="0.1"
+                        arc="180"
+                        rotation="0 0 0"
+                        position="0 0.97 1.96"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-torus>
+                    <!-- keyhole -->
+                    <a-circle radius="0.14" position="0 0.3 2.26" material="color:#000;shader:flat"></a-circle>
+                    <!-- encrypted label on front — pulled forward -->
+                    <a-text
+                        value="{ ENCRYPTED DATA }"
+                        position="0 -1.2 2.2"
+                        color="#4488ff"
+                        width="13"
+                        align="center"
+                        font="monoid"
+                        material="shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                        animation="property:material.opacity;from:1;to:0.1;direction:alternate;dur:750;loop:true"
+                    ></a-text>
+                    <!-- glow aura -->
+                    <a-sphere radius="4" material="color:#0044ff;opacity:0.04;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.12 1.12 1.12;direction:alternate;dur:1800;loop:true;easing:easeInOutSine"></a-sphere>
+                </a-entity>
+                <!-- orbit energy rings -->
+                <a-torus
+                    radius="4.2"
+                    radius-tubular="0.08"
+                    rotation="80 0 0"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1;opacity:0.55;transparent:true"
+                    animation="property:rotation;from:80 0 0;to:80 360 0;loop:true;dur:4200;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="4.2"
+                    radius-tubular="0.05"
+                    rotation="80 90 0"
+                    material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1;opacity:0.28;transparent:true"
+                    animation="property:rotation;from:80 90 0;to:80 450 0;loop:true;dur:6000;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="5"
+                    radius-tubular="0.04"
+                    rotation="60 30 0"
+                    material="color:#0033ff;shader:flat;emissive:#0033ff;emissiveIntensity:1;opacity:0.15;transparent:true"
+                    animation="property:rotation;from:60 30 0;to:60 390 0;loop:true;dur:9000;easing:linear"
+                ></a-torus>
+                <!-- ── LABELS — pulled forward Z=7 ── -->
+                <a-text
+                    value="① LOCK"
+                    position="0 6.2 7"
+                    align="center"
+                    color="#4488ff"
+                    width="30"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#2255dd;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="ENCRYPT"
+                    position="0 4.9 7"
+                    align="center"
+                    color="#ffffff"
+                    width="20"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#ffffff;emissiveIntensity:0.5"
+                ></a-text>
+                <!-- description card bg -->
+                <a-plane
+                    width="8.5"
+                    height="3.8"
+                    position="0 -7 7"
+                    rotation="0 0 0"
+                    material="color:#001133;opacity:0.75;transparent:true"
+                ></a-plane>
+                <a-plane
+                    width="8.5"
+                    height="0.12"
+                    position="0 -8.9 7.01"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="Your data goes in as a&#10;sealed, padlocked box.&#10;The box is encrypted —&#10;only YOU hold the key."
+                    position="0 -7 7.1"
+                    align="center"
+                    color="#aabbff"
+                    width="16"
+                    font="kelsonsans"
+                    line-height="1.6"
+                ></a-text>
+                <!-- KEY prop (large, floating beside chest) -->
+                <a-entity position="4.8 1.5 2" animation="property:position;from:4.8 1.5 2;to:4.8 2.6 2;direction:alternate;dur:2200;loop:true;easing:easeInOutSine">
+                    <a-torus radius="0.8" radius-tubular="0.22" material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:1"></a-torus>
+                    <a-cylinder
+                        radius="0.14"
+                        height="2.2"
+                        rotation="0 0 90"
+                        position="1.55 0 0"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-cylinder>
+                    <a-box
+                        width="0.2"
+                        height="0.5"
+                        depth="0.28"
+                        position="2.45 -0.25 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-box
+                        width="0.2"
+                        height="0.36"
+                        depth="0.28"
+                        position="2.78 -0.2 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <!-- key glow -->
+                    <a-sphere radius="0.6" material="color:#ffcc00;opacity:0.12;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.5 1.5 1.5;direction:alternate;dur:1200;loop:true"></a-sphere>
+                    <a-text
+                        value="🔑 YOU"
+                        position="-0.2 1.5 0"
+                        color="#ffcc00"
+                        width="9"
+                        align="center"
+                        font="exo2bold"
+                        material="shader:flat;emissive:#997700;emissiveIntensity:1"
+                    ></a-text>
+                </a-entity>
+                <!-- "YOUR DATA" label floating above -->
+                <a-text
+                    value="YOUR DATA"
+                    position="0 3.2 7"
+                    align="center"
+                    color="#88aaff"
+                    width="16"
+                    font="kelsonsans"
+                    material="shader:flat;emissive:#4466cc;emissiveIntensity:0.8"
+                    animation="property:material.opacity;from:0.8;to:0.3;direction:alternate;dur:2000;loop:true"
+                ></a-text>
+            </a-entity>
+            <!-- /s1 -->
+            <!-- ═══════════════════ STATION 2 — COMPUTE ═══════════════════ -->
+            <a-entity id="s2" position="0 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="5.5"
+                    height="0.38"
+                    position="0 -5.38 0"
+                    material="color:#050c12;metalness:0.97;roughness:0.08;emissive:#003322;emissiveIntensity:0.4"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="5.5"
+                    height="0.14"
+                    position="0 -5 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.5;transparent:true"
+                    animation="property:material.opacity;from:0.5;to:0.08;direction:alternate;dur:1400;loop:true"
+                ></a-cylinder>
+                <a-torus
+                    radius="5.5"
+                    radius-tubular="0.05"
+                    rotation="90 0 0"
+                    position="0 -4.86 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.25;transparent:true"
+                ></a-torus>
+                <a-torus
+                    radius="4.2"
+                    radius-tubular="0.03"
+                    rotation="90 0 0"
+                    position="0 -4.86 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.15;transparent:true"
+                ></a-torus>
+                <!-- MACHINE SHELL — big -->
+                <a-box
+                    width="8.5"
+                    height="10"
+                    depth="6.2"
+                    position="0 0 0"
+                    material="color:#030d14;metalness:0.98;roughness:0.04;emissive:#003322;emissiveIntensity:0.15"
+                ></a-box>
+                <!-- front panel glass -->
+                <a-box
+                    width="8.1"
+                    height="9.6"
+                    depth="0.12"
+                    position="0 0 3.16"
+                    material="color:#00ffcc;opacity:0.04;transparent:true;shader:flat"
+                ></a-box>
+                <!-- edge glow strips -->
+                <a-box
+                    width="8.6"
+                    height="0.15"
+                    depth="6.3"
+                    position="0  5.08 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="8.6"
+                    height="0.15"
+                    depth="6.3"
+                    position="0 -5.08 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="0.15"
+                    height="10.1"
+                    depth="6.3"
+                    position=" 4.33 0 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="0.15"
+                    height="10.1"
+                    depth="6.3"
+                    position="-4.33 0 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <!-- corner vertical edge strips -->
+                <a-box
+                    width="0.1"
+                    height="10.1"
+                    depth="0.1"
+                    position=" 4.33 0  3.16"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="0.1"
+                    height="10.1"
+                    depth="0.1"
+                    position="-4.33 0  3.16"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-box>
+                <!-- IN/OUT slots -->
+                <a-box
+                    width="0.12"
+                    height="1.8"
+                    depth="1.8"
+                    position="-4.33 0 0"
+                    material="color:#0066ff;shader:flat;emissive:#0066ff;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="0.12"
+                    height="1.8"
+                    depth="1.8"
+                    position=" 4.33 0 0"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-box>
+                <!-- IN / OUT labels — FORWARD -->
+                <a-text
+                    value="◀ IN"
+                    position="-6.5 0 7"
+                    color="#4488ff"
+                    width="12"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="OUT ▶"
+                    position="6.5 0 7"
+                    color="#ff44aa"
+                    width="12"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#ff44aa;emissiveIntensity:1"
+                ></a-text>
+                <!-- ── INTERNAL GEARS ── -->
+                <!-- big gear 1 -->
+                <a-torus
+                    radius="2"
+                    radius-tubular="0.3"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.92;roughness:0.08;emissive:#005544;emissiveIntensity:0.9"
+                    animation="property:rotation;from:0 0 0;to:0 0 360;loop:true;dur:2800;easing:linear"
+                ></a-torus>
+                <a-box
+                    width="4.2"
+                    height="0.3"
+                    depth="0.3"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.9;emissive:#005544;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 0;to:0 0 360;loop:true;dur:2800;easing:linear"
+                ></a-box>
+                <a-box
+                    width="0.3"
+                    height="4.2"
+                    depth="0.3"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.9;emissive:#005544;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 45;to:0 0 405;loop:true;dur:2800;easing:linear"
+                ></a-box>
+                <!-- gear 1 teeth (8 boxes around ring) -->
+                <a-box
+                    width="0.35"
+                    height="0.55"
+                    depth="0.35"
+                    position="2 1.5 2"
+                    material="color:#00ffcc;metalness:0.9;emissive:#005544;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 0;to:0 0 360;loop:true;dur:2800;easing:linear"
+                ></a-box>
+                <!-- gear 2 (counter, right lower) -->
+                <a-torus
+                    radius="1.5"
+                    radius-tubular="0.24"
+                    position="2.2 -2 2"
+                    material="color:#ff00aa;metalness:0.92;roughness:0.08;emissive:#660033;emissiveIntensity:0.9"
+                    animation="property:rotation;from:0 0 20;to:0 0 -340;loop:true;dur:2200;easing:linear"
+                ></a-torus>
+                <a-box
+                    width="3.2"
+                    height="0.24"
+                    depth="0.24"
+                    position="2.2 -2 2"
+                    material="color:#ff00aa;metalness:0.9;emissive:#660033;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 20;to:0 0 -340;loop:true;dur:2200;easing:linear"
+                ></a-box>
+                <a-box
+                    width="0.24"
+                    height="3.2"
+                    depth="0.24"
+                    position="2.2 -2 2"
+                    material="color:#ff00aa;metalness:0.9;emissive:#660033;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 65;to:0 0 -295;loop:true;dur:2200;easing:linear"
+                ></a-box>
+                <!-- gear 3 (left upper) -->
+                <a-torus
+                    radius="1.2"
+                    radius-tubular="0.2"
+                    position="-2.5 1.8 2"
+                    material="color:#ffcc00;metalness:0.92;roughness:0.08;emissive:#885500;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 0;to:0 0 -360;loop:true;dur:3500;easing:linear"
+                ></a-torus>
+                <!-- spinning encrypted cube -->
+                <a-box
+                    width="1.4"
+                    height="1.4"
+                    depth="1.4"
+                    position="0 0 2.1"
+                    material="color:#00ffcc;wireframe:true;opacity:0.75;transparent:true;emissive:#00aa88;emissiveIntensity:1"
+                    animation="property:rotation;to:360 360 360;loop:true;dur:1600;easing:linear"
+                ></a-box>
+                <a-sphere
+                    radius="0.5"
+                    position="0 0 2.1"
+                    material="color:#00ffcc;opacity:0.15;transparent:true;shader:flat"
+                    animation="property:scale;from:1 1 1;to:1.5 1.5 1.5;direction:alternate;dur:800;loop:true"
+                ></a-sphere>
+                <!-- NO OPEN badge (front panel) -->
+                <a-circle radius="1.3" position="3 3.4 3.24" material="color:#cc0000;shader:flat;emissive:#ff0000;emissiveIntensity:0.65;opacity:0.92;transparent:true"></a-circle>
+                <a-box
+                    width="1.9"
+                    height="0.26"
+                    depth="0.18"
+                    position="3 3.4 3.28"
+                    rotation="0 0 45"
+                    material="color:#ff3333;shader:flat;emissive:#ff2222;emissiveIntensity:1"
+                ></a-box>
+                <a-box
+                    width="1.9"
+                    height="0.26"
+                    depth="0.18"
+                    position="3 3.4 3.28"
+                    rotation="0 0 -45"
+                    material="color:#ff3333;shader:flat;emissive:#ff2222;emissiveIntensity:1"
+                ></a-box>
+                <!-- NO OPEN label — forward -->
+                <a-text
+                    value="🔒 BOX NEVER&#10;   OPENED"
+                    position="3.5 2.1 7"
+                    color="#ff5555"
+                    width="9"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#ff3333;emissiveIntensity:1"
+                ></a-text>
+                <!-- flashing math ops — forward -->
+                <a-text
+                    value="+ − × ÷ ≡"
+                    position="0 -0.8 8"
+                    color="#00ffcc"
+                    width="16"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#00aa88;emissiveIntensity:1"
+                    animation="property:material.opacity;from:1;to:0.08;direction:alternate;dur:550;loop:true"
+                ></a-text>
+                <!-- status readout lines on front -->
+                <a-text
+                    value="STATUS: PROCESSING..."
+                    position="-2.5 4 3.25"
+                    color="#00ffcc"
+                    width="8"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#00aa88;emissiveIntensity:1"
+                    animation="property:material.opacity;from:1;to:0.2;direction:alternate;dur:900;loop:true"
+                ></a-text>
+                <a-text
+                    value="ENCRYPTION: INTACT"
+                    position="-2.5 3.3 3.25"
+                    color="#00ff44"
+                    width="8"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#00cc33;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="ACCESS: DENIED"
+                    position="-2.5 2.6 3.25"
+                    color="#ff3333"
+                    width="8"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#ff2222;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="PRIVACY: 100%"
+                    position="-2.5 1.9 3.25"
+                    color="#00ffcc"
+                    width="8"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#00cc99;emissiveIntensity:1"
+                ></a-text>
+                <!-- outer energy rings -->
+                <a-torus
+                    radius="7"
+                    radius-tubular="0.09"
+                    rotation="90 0 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.25;transparent:true"
+                    animation="property:rotation;from:90 0 0;to:90 360 0;loop:true;dur:5500;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="7"
+                    radius-tubular="0.09"
+                    rotation="90 120 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.15;transparent:true"
+                    animation="property:rotation;from:90 120 0;to:90 480 0;loop:true;dur:8000;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="8.5"
+                    radius-tubular="0.06"
+                    rotation="90 60 0"
+                    material="color:#004433;shader:flat;emissive:#00aa66;emissiveIntensity:1;opacity:0.1;transparent:true"
+                    animation="property:rotation;from:90 60 0;to:90 420 0;loop:true;dur:12000;easing:linear"
+                ></a-torus>
+                <!-- ── LABELS — FORWARD ── -->
+                <a-text
+                    value="② COMPUTE"
+                    position="0 7.2 8"
+                    align="center"
+                    color="#00ffcc"
+                    width="30"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#00cc99;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="FHE MACHINE"
+                    position="0 5.9 8"
+                    align="center"
+                    color="#ffffff"
+                    width="22"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#ffffff;emissiveIntensity:0.35"
+                ></a-text>
+                <!-- description card -->
+                <a-plane
+                    width="12"
+                    height="4.5"
+                    position="0 -8 8"
+                    rotation="0 0 0"
+                    material="color:#030d14;opacity:0.8;transparent:true"
+                ></a-plane>
+                <a-plane
+                    width="12"
+                    height="0.14"
+                    position="0 -10.26 8.01"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="The machine receives the locked box.&#10;It runs calculations — adds, subtracts,&#10;processes transactions — but the box&#10;is NEVER opened. Your data is always&#10;encrypted. Privacy mathematically guaranteed."
+                    position="0 -8 8.1"
+                    align="center"
+                    color="#aaffee"
+                    width="20"
+                    font="kelsonsans"
+                    line-height="1.6"
+                ></a-text>
+            </a-entity>
+            <!-- /s2 -->
+            <!-- ═══════════════════ STATION 3 — UNLOCK ═══════════════════ -->
+            <a-entity id="s3" position="17 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="4.5"
+                    height="0.35"
+                    position="0 -5.35 0"
+                    material="color:#130011;metalness:0.95;roughness:0.1;emissive:#440022;emissiveIntensity:0.4"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="4.5"
+                    height="0.12"
+                    position="0 -5 0"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1;opacity:0.55;transparent:true"
+                    animation="property:material.opacity;from:0.55;to:0.1;direction:alternate;dur:1800;loop:true"
+                ></a-cylinder>
+                <a-torus
+                    radius="4.5"
+                    radius-tubular="0.04"
+                    rotation="90 0 0"
+                    position="0 -4.88 0"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1;opacity:0.28;transparent:true"
+                ></a-torus>
+                <a-torus
+                    radius="3.5"
+                    radius-tubular="0.03"
+                    rotation="90 0 0"
+                    position="0 -4.88 0"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1;opacity:0.18;transparent:true"
+                ></a-torus>
+                <!-- RESULT CHEST (still locked!) -->
+                <a-entity animation="property:position;from:0 0 0;to:0 0.7 0;direction:alternate;dur:2300;loop:true;easing:easeInOutSine">
+                    <a-box
+                        width="5"
+                        height="3.5"
+                        depth="3.8"
+                        position="0 -1.75 0"
+                        material="color:#3a1428;metalness:0.92;roughness:0.12;emissive:#220011;emissiveIntensity:0.7"
+                    ></a-box>
+                    <a-box
+                        width="5"
+                        height="1.5"
+                        depth="3.8"
+                        position="0 0.75 0"
+                        material="color:#4a2040;metalness:0.92;roughness:0.12;emissive:#330022;emissiveIntensity:0.7"
+                    ></a-box>
+                    <!-- seam glow -->
+                    <a-box
+                        width="5.18"
+                        height="0.2"
+                        depth="3.9"
+                        position="0 0.02 0"
+                        material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                    ></a-box>
+                    <!-- decoration stripes -->
+                    <a-box
+                        width="5.02"
+                        height="0.08"
+                        depth="3.82"
+                        position="0 -0.9 0"
+                        material="color:#aa2266;shader:flat;emissive:#aa2266;emissiveIntensity:0.8"
+                    ></a-box>
+                    <a-box
+                        width="5.02"
+                        height="0.08"
+                        depth="3.82"
+                        position="0 -1.8 0"
+                        material="color:#aa2266;shader:flat;emissive:#aa2266;emissiveIntensity:0.8"
+                    ></a-box>
+                    <!-- corner bolts -->
+                    <a-sphere radius="0.16" position=" 2.4  0.75  1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4  0.75  1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4  0.75 -1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4  0.75 -1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4 -1.75  1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4 -1.75  1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position=" 2.4 -1.75 -1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.16" position="-2.4 -1.75 -1.8" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <!-- PADLOCK (still locked!) -->
+                    <a-box
+                        width="1.2"
+                        height="1.0"
+                        depth="0.6"
+                        position="0 0.35 1.96"
+                        material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:0.9"
+                    ></a-box>
+                    <a-torus
+                        radius="0.46"
+                        radius-tubular="0.1"
+                        arc="180"
+                        rotation="0 0 0"
+                        position="0 0.97 1.96"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-torus>
+                    <a-circle radius="0.14" position="0 0.3 2.27" material="color:#000;shader:flat"></a-circle>
+                    <!-- result label -->
+                    <a-text
+                        value="{ RESULT SEALED }"
+                        position="0 -1.2 2.2"
+                        color="#ff44aa"
+                        width="13"
+                        align="center"
+                        font="monoid"
+                        material="shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                        animation="property:material.opacity;from:1;to:0.1;direction:alternate;dur:750;loop:true"
+                    ></a-text>
+                    <a-sphere radius="4" material="color:#ff0077;opacity:0.04;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.12 1.12 1.12;direction:alternate;dur:1800;loop:true;easing:easeInOutSine"></a-sphere>
+                </a-entity>
+                <!-- orbit rings -->
+                <a-torus
+                    radius="4.2"
+                    radius-tubular="0.08"
+                    rotation="80 0 0"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1;opacity:0.55;transparent:true"
+                    animation="property:rotation;from:80 0 0;to:80 -360 0;loop:true;dur:4200;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="4.2"
+                    radius-tubular="0.05"
+                    rotation="80 90 0"
+                    material="color:#ff44aa;shader:flat;emissive:#ff44aa;emissiveIntensity:1;opacity:0.28;transparent:true"
+                    animation="property:rotation;from:80 90 0;to:80 450 0;loop:true;dur:6000;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="5"
+                    radius-tubular="0.04"
+                    rotation="60 30 0"
+                    material="color:#cc0055;shader:flat;emissive:#cc0055;emissiveIntensity:1;opacity:0.15;transparent:true"
+                    animation="property:rotation;from:60 30 0;to:60 390 0;loop:true;dur:9000;easing:linear"
+                ></a-torus>
+                <!-- YOUR KEY animating to lock -->
+                <a-entity animation="property:position;from:-5 2.5 2;to:-0.06 0.63 2;direction:alternate;dur:3000;loop:true;easing:easeInOutCubic">
+                    <a-torus radius="0.8" radius-tubular="0.22" material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:1"></a-torus>
+                    <a-cylinder
+                        radius="0.14"
+                        height="2.2"
+                        rotation="0 0 90"
+                        position="1.55 0 0"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-cylinder>
+                    <a-box
+                        width="0.2"
+                        height="0.5"
+                        depth="0.28"
+                        position="2.45 -0.25 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-box
+                        width="0.2"
+                        height="0.36"
+                        depth="0.28"
+                        position="2.78 -0.2 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-sphere radius="0.65" material="color:#ffcc00;opacity:0.14;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.7 1.7 1.7;direction:alternate;dur:900;loop:true"></a-sphere>
+                    <a-text
+                        value="🔑 YOUR KEY"
+                        position="-0.1 1.5 0"
+                        color="#ffcc00"
+                        width="9"
+                        align="center"
+                        font="exo2bold"
+                        material="shader:flat;emissive:#997700;emissiveIntensity:1"
+                    ></a-text>
+                </a-entity>
+                <!-- LABELS — FORWARD -->
+                <a-text
+                    value="③ UNLOCK"
+                    position="0 6.2 7"
+                    align="center"
+                    color="#ff44aa"
+                    width="30"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#cc0055;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="DECRYPT"
+                    position="0 4.9 7"
+                    align="center"
+                    color="#ffffff"
+                    width="20"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#ffffff;emissiveIntensity:0.5"
+                ></a-text>
+                <a-text
+                    value="RESULT&#10;REVEALED"
+                    position="0 3.2 7"
+                    align="center"
+                    color="#ff88cc"
+                    width="14"
+                    font="kelsonsans"
+                    material="shader:flat;emissive:#cc2255;emissiveIntensity:0.7"
+                    animation="property:material.opacity;from:0.9;to:0.3;direction:alternate;dur:1800;loop:true"
+                ></a-text>
+                <!-- description card -->
+                <a-plane
+                    width="8.5"
+                    height="3.8"
+                    position="0 -7 7"
+                    rotation="0 0 0"
+                    material="color:#130011;opacity:0.75;transparent:true"
+                ></a-plane>
+                <a-plane
+                    width="8.5"
+                    height="0.12"
+                    position="0 -8.9 7.01"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="Result returned — still sealed.&#10;Only YOUR key can unlock it.&#10;No one else ever saw your data.&#10;Privacy intact. Answer revealed."
+                    position="0 -7 7.1"
+                    align="center"
+                    color="#ffaace"
+                    width="16"
+                    font="kelsonsans"
+                    line-height="1.6"
+                ></a-text>
+            </a-entity>
+            <!-- /s3 -->
+            <!-- ═══════════════════ GLOBAL TITLE ═══════════════════ -->
+            <a-text
+                value="FULLY HOMOMORPHIC ENCRYPTION"
+                position="0 15 8"
+                align="center"
+                color="#00ffcc"
+                width="40"
+                font="exo2bold"
+                material="shader:flat;emissive:#00cc99;emissiveIntensity:1"
+            ></a-text>
+            <a-text
+                value='"Compute on data without ever seeing it"'
+                position="0 13.2 8"
+                align="center"
+                color="#aaffee"
+                width="32"
+                font="kelsonsans"
+            ></a-text>
+            <!-- title underline -->
+            <a-plane
+                width="32"
+                height="0.1"
+                position="0 12.6 8"
+                material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.4;transparent:true"
+            ></a-plane>
+            <!-- ═══════════════════ IMPACT CALLOUT CARDS ═══════════════════ -->
+            <!-- left col -->
+            <a-entity position="-28 6.5 6">
+                <a-plane width="10" height="2.4" material="color:#001133;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  Balance stays hidden"
+                    position="0 0 0.14"
+                    color="#aabbff"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <a-entity position="-28 3.5 6">
+                <a-plane width="10" height="2.4" material="color:#001133;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  Transactions private"
+                    position="0 0 0.14"
+                    color="#aabbff"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <a-entity position="-28 0.5 6">
+                <a-plane width="10" height="2.4" material="color:#001133;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#0055ff;shader:flat;emissive:#0055ff;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  Identity protected"
+                    position="0 0 0.14"
+                    color="#aabbff"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <!-- right col -->
+            <a-entity position="28 6.5 6">
+                <a-plane width="10" height="2.4" material="color:#130011;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  Data never exposed"
+                    position="0 0 0.14"
+                    color="#ffaace"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <a-entity position="28 3.5 6">
+                <a-plane width="10" height="2.4" material="color:#130011;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  Everything still works"
+                    position="0 0 0.14"
+                    color="#ffaace"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <a-entity position="28 0.5 6">
+                <a-plane width="10" height="2.4" material="color:#130011;opacity:0.88;transparent:true"></a-plane>
+                <a-plane
+                    width="10"
+                    height="0.16"
+                    position="0 -1.2 0.02"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓  No trust required"
+                    position="0 0 0.14"
+                    color="#ffaace"
+                    width="17"
+                    align="center"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <!-- ═══════════════════ PRIVACY NEXUS — CENTER BOTTOM ═══════════════════ -->
+            <a-entity position="0 -10 6">
+                <!-- outer rings -->
+                <a-torus
+                    radius="3.5"
+                    radius-tubular="0.12"
+                    rotation="0 0 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.45;transparent:true"
+                    animation="property:rotation;to:0 360 0;loop:true;dur:10000;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="3.5"
+                    radius-tubular="0.08"
+                    rotation="90 0 0"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1;opacity:0.25;transparent:true"
+                    animation="property:rotation;from:90 0 0;to:90 -360 0;loop:true;dur:7000;easing:linear"
+                ></a-torus>
+                <!-- center gem -->
+                <a-octahedron radius="1.8" material="color:#00ffcc;wireframe:true;opacity:0.5;transparent:true" animation="property:rotation;to:360 360 0;loop:true;dur:5000;easing:linear"></a-octahedron>
+                <a-dodecahedron radius="2.2" material="color:#ffffff;wireframe:true;opacity:0.1;transparent:true" animation="property:rotation;to:0 -360 360;loop:true;dur:8000;easing:linear"></a-dodecahedron>
+                <!-- text -->
+                <a-text
+                    value="PRIVACY + USEFULNESS = FHENIX"
+                    position="0 5 0"
+                    align="center"
+                    color="#ffffff"
+                    width="26"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#aaffcc;emissiveIntensity:0.7"
+                ></a-text>
+                <a-text
+                    value="You no longer have to choose between privacy and usefulness."
+                    position="0 3.8 0"
+                    align="center"
+                    color="#aaffee"
+                    width="22"
+                    font="kelsonsans"
+                ></a-text>
+                <a-text
+                    value="Fhenix brings FHE to the blockchain."
+                    position="0 2.9 0"
+                    align="center"
+                    color="#00ffcc"
+                    width="18"
+                    font="kelsonsans"
+                    material="shader:flat;emissive:#00aa88;emissiveIntensity:0.6"
+                ></a-text>
+            </a-entity>
+            <!-- ═══════════════════ FLOATING INFO TAGS (new) ═══════════════════ -->
+            <!-- "SEALED" tag above station 1 chest -->
+            <a-entity position="-17 4.8 8" animation="property:position;from:-17 4.8 8;to:-17 5.3 8;direction:alternate;dur:1800;loop:true;easing:easeInOutSine">
+                <a-plane width="5" height="1.2" material="color:#001133;opacity:0.9;transparent:true"></a-plane>
+                <a-plane
+                    width="5"
+                    height="0.1"
+                    position="0 -0.6 0.01"
+                    material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="🔒 SEALED"
+                    position="0 0 0.08"
+                    color="#4488ff"
+                    width="10"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                ></a-text>
+            </a-entity>
+            <!-- "COMPUTING" tag above station 2 -->
+            <a-entity position="0 7.8 9" animation="property:position;from:0 7.8 9;to:0 8.3 9;direction:alternate;dur:1400;loop:true;easing:easeInOutSine">
+                <a-plane width="6.5" height="1.2" material="color:#030d14;opacity:0.9;transparent:true"></a-plane>
+                <a-plane
+                    width="6.5"
+                    height="0.1"
+                    position="0 -0.6 0.01"
+                    material="color:#00ffcc;shader:flat;emissive:#00ffcc;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="⚙ COMPUTING..."
+                    position="0 0 0.08"
+                    color="#00ffcc"
+                    width="12"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#00cc88;emissiveIntensity:1"
+                    animation="property:material.opacity;from:1;to:0.3;direction:alternate;dur:600;loop:true"
+                ></a-text>
+            </a-entity>
+            <!-- "RESULT READY" tag above station 3 -->
+            <a-entity position="17 4.8 8" animation="property:position;from:17 4.8 8;to:17 5.3 8;direction:alternate;dur:2000;loop:true;easing:easeInOutSine">
+                <a-plane width="6" height="1.2" material="color:#130011;opacity:0.9;transparent:true"></a-plane>
+                <a-plane
+                    width="6"
+                    height="0.1"
+                    position="0 -0.6 0.01"
+                    material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                ></a-plane>
+                <a-text
+                    value="✓ RESULT READY"
+                    position="0 0 0.08"
+                    color="#ff44aa"
+                    width="11"
+                    align="center"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#cc0055;emissiveIntensity:1"
+                ></a-text>
+            </a-entity>
+        </a-scene>
+        <!-- ===================================================================
+     JAVASCRIPT — scroll zoom + phase cycling + tooltips
+=================================================================== -->
+        <script>
+// ── SCROLL ZOOM ──
+const rig = document.getElementById('rig');
+let zoomZ = 32;
+const ZOOM_MIN = 10;
+const ZOOM_MAX = 55;
+
+window.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoomZ += e.deltaY * 0.04;
+  zoomZ = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomZ));
+  const pos = rig.getAttribute('position');
+  rig.setAttribute('position', { x: pos.x, y: pos.y, z: zoomZ });
+  // update thumb
+  const pct = ((zoomZ - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100;
+  document.getElementById('zoom-thumb').style.height = (100 - pct) + '%';
+}, { passive: false });
+
+// ── PHASE BAR CYCLE ──
+const cards = [
+  document.getElementById('pc1'),
+  document.getElementById('pc2'),
+  document.getElementById('pc3'),
+];
+let activePhase = 0;
+function setPhase(i) {
+  cards.forEach((c, idx) => c.classList.toggle('active', idx === i));
+  activePhase = i;
+}
+setInterval(() => setPhase((activePhase + 1) % 3), 4500);
+
+// ── TOOLTIP MESSAGES cycling ──
+const tips = [
+  "FHE performs math on encrypted data — the box is NEVER opened",
+  "Traditional encryption: decrypt → compute → re-encrypt  ❌ Privacy lost",
+  "FHE: compute directly on ciphertext  ✓ Privacy preserved always",
+  "Fhenix brings Fully Homomorphic Encryption to the blockchain",
+  "Your balance, identity, and transactions stay hidden — but still work",
+  "Only the data owner can decrypt the result with their private key",
+];
+let tipIdx = 0;
+const tooltip = document.getElementById('tooltip');
+function showTip() {
+  tooltip.textContent = tips[tipIdx];
+  tooltip.classList.add('show');
+  setTimeout(() => {
+    tooltip.classList.remove('show');
+    setTimeout(() => {
+      tipIdx = (tipIdx + 1) % tips.length;
+      showTip();
+    }, 1200);
+  }, 4000);
+}
+setTimeout(showTip, 2000);
+        </script>
+    </body>
+</html>
