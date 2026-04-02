@@ -1,10 +1,24 @@
 "use client";
 
 import React from "react";
-import Section from "@/content/ComponentsForCode/Section";
 import { Package, Unlock, Plus, Settings, Calculator, Lock, Key, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Section from "@/content/ComponentsForCode/Section";
 
 export default function ProveWithoutRevealing() {
+    const iframeRef = useRef(null);
+    const [loadIframe, setLoadIframe] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setLoadIframe(true);
+                observer.disconnect();
+            }
+        });
+        if (iframeRef.current) observer.observe(iframeRef.current);
+        return () => observer.disconnect();
+    }, []);
     return (
         <div style={{ paddingBottom: "60px", animation: "fadeIn 0.6s ease-out" }}>
             <p style={{ fontSize: "1.2rem", color: "var(--color-accent)", fontWeight: 600, marginBottom: "40px" }}>
@@ -41,6 +55,23 @@ export default function ProveWithoutRevealing() {
                             They must <strong>open the box</strong> and see everything inside. The moment the box is opened, <strong>you lose your privacy</strong>.
                         </p>
                     </div>
+                </div>
+
+                <div
+                    ref={iframeRef}
+                    style={{
+                        borderRadius: "20px", overflow: "hidden", border: "1px solid var(--color-border-primary)",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.3)", marginBottom: "40px",
+                        background: "var(--color-bg-secondary)"
+                    }}
+                >
+                    {loadIframe ? (
+                        <iframe src="/privacyfhe.html" title="Fully Homomorphic Encryption" width="100%" height="500px" style={{ border: "none" }} />
+                    ) : (
+                        <div style={{ height: "500px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)" }}>
+                            Loading 3D glass house...
+                        </div>
+                    )}
                 </div>
             </Section>
 

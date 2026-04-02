@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>FHE: The Locked Box Machine</title>
+        <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+        <style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Courier New',monospace}
+
+#hud-top{
+  position:fixed;top:0;left:0;width:100%;z-index:300;
+  pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:14px;gap:4px;
+}
+.hud-title{
+  font-size:clamp(14px,2.2vw,22px);font-weight:900;letter-spacing:5px;color:#00ffcc;
+  text-transform:uppercase;
+}
+.hud-sub{font-size:clamp(9px,1.1vw,12px);letter-spacing:2px;color:rgba(170,255,220,0.5)}
+
+#phase-bar{
+  position:fixed;bottom:0;left:0;width:100%;z-index:300;
+  pointer-events:none;
+  display:flex;justify-content:space-around;align-items:stretch;
+  background:rgba(0,0,0,0.92);
+  border-top:1px solid rgba(0,255,204,0.18);
+  padding:10px 16px;gap:10px;
+}
+.phase-card{
+  flex:1;text-align:center;border-radius:8px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  transition:all 0.6s ease;
+}
+.phase-card.active{
+  border-color:var(--c);
+  background:rgba(0,0,0,0.5);
+  box-shadow:0 0 18px var(--c);
+  transform:translateY(-2px);
+}
+.phase-card .num{font-size:clamp(16px,2vw,22px);font-weight:900;color:var(--c);line-height:1}
+.phase-card .ph{font-size:clamp(9px,1.1vw,12px);letter-spacing:3px;color:#fff;margin:3px 0;text-transform:uppercase;font-weight:bold}
+.phase-card .desc{font-size:clamp(8px,0.9vw,10px);letter-spacing:1px;color:rgba(255,255,255,0.4);line-height:1.5}
+
+#tooltip{
+  position:fixed;left:50%;bottom:90px;transform:translateX(-50%);
+  z-index:300;pointer-events:none;
+  background:rgba(0,0,0,0.85);
+  border:1px solid rgba(0,255,204,0.35);
+  border-radius:10px;padding:9px 20px;
+  font-size:clamp(9px,1vw,11px);letter-spacing:1.5px;color:#00ffcc;
+  text-align:center;line-height:1.7;
+  opacity:0;transition:opacity 0.5s ease;
+  max-width:min(440px,90vw);
+}
+#tooltip.show{opacity:1}
+
+#controls-hint{
+  position:fixed;top:70px;right:14px;z-index:300;
+  pointer-events:none;
+  font-size:clamp(8px,0.9vw,10px);color:rgba(0,255,204,0.3);
+  letter-spacing:1.5px;line-height:2.2;text-align:right;
+}
+        </style>
+    </head>
+    <body>
+        <div id="hud-top">
+            <div class="hud-title">⬡ Fully Homomorphic Encryption</div>
+            <div class="hud-sub">"Compute on data without ever seeing it"</div>
+        </div>
+        <div id="controls-hint">
+            WASD · move
+            <br>DRAG · look
+            <br>
+            SCROLL · zoom
+        </div>
+        <div id="tooltip"></div>
+        <div id="phase-bar">
+            <div class="phase-card active" id="pc1" style="--c:#4488ff">
+                <div class="num">①</div>
+                <div class="ph">Lock</div>
+                <div class="desc">Data sealed in encrypted box
+                    <br>Only you hold the key
+                </div>
+            </div>
+            <div class="phase-card" id="pc2" style="--c:#00ffcc">
+                <div class="num">②</div>
+                <div class="ph">Compute</div>
+                <div class="desc">Machine processes sealed box
+                    <br>Box is never opened
+                </div>
+            </div>
+            <div class="phase-card" id="pc3" style="--c:#ff44aa">
+                <div class="num">③</div>
+                <div class="ph">Unlock</div>
+                <div class="desc">Result returned still sealed
+                    <br>Only your key reveals answer
+                </div>
+            </div>
+        </div>
+        <a-scene fog="type:exponential;color:#010a18;density:0.007" renderer="antialias:true;colorManagement:true" vr-mode-ui="enabled:false">
+            <a-sky color="#010a18"></a-sky>
+            <!-- Lights -->
+            <a-light type="ambient" color="#0a1525" intensity="4"></a-light>
+            <a-light
+                type="point"
+                position="-22 10 10"
+                color="#1155ff"
+                intensity="5"
+                distance="55"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="point"
+                position="22 10 10"
+                color="#ff0077"
+                intensity="4.5"
+                distance="55"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="point"
+                position="0 15 8"
+                color="#00ffcc"
+                intensity="4"
+                distance="50"
+                decay="1.5"
+            ></a-light>
+            <a-light
+                type="directional"
+                position="2 8 12"
+                intensity="1.2"
+                color="#cce8ff"
+            ></a-light>
+            <!-- Camera rig -->
+            <a-entity id="rig" position="0 4 30">
+                <a-entity
+                    id="cam"
+                    camera
+                    look-controls
+                    wasd-controls
+                    fov="72"
+                >
+                    <a-cursor color="#00ffcc" scale="0.25 0.25 0.25" material="color:#00ffcc;shader:flat;opacity:0.7;transparent:true"></a-cursor>
+                </a-entity>
+            </a-entity>
+            <!-- Floor -->
+            <a-plane
+                rotation="-90 0 0"
+                width="200"
+                height="200"
+                position="0 -6 0"
+                material="color:#010a14"
+            ></a-plane>
+            <a-plane
+                rotation="-90 0 0"
+                width="60"
+                height="0.18"
+                position="0 -5.9 4"
+                material="color:#00ffcc;shader:flat;opacity:0.3;transparent:true"
+                animation="property:material.opacity;from:0.3;to:0.05;direction:alternate;dur:2200;loop:true"
+            ></a-plane>
+            <!-- Pipeline left -->
+            <a-cylinder
+                position="-10.5 2 4"
+                rotation="0 0 90"
+                radius="0.18"
+                height="13"
+                material="color:#1155ff;shader:flat;opacity:0.4;transparent:true"
+                animation="property:material.opacity;from:0.4;to:0.07;direction:alternate;dur:1500;loop:true"
+            ></a-cylinder>
+            <a-cone
+                radius-bottom="0.55"
+                radius-top="0"
+                height="1"
+                position="-4.5 2 4"
+                rotation="0 0 -90"
+                material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1;opacity:0.85;transparent:true"
+            ></a-cone>
+            <!-- Pipeline right -->
+            <a-cylinder
+                position="10.5 2 4"
+                rotation="0 0 90"
+                radius="0.18"
+                height="13"
+                material="color:#ff0077;shader:flat;opacity:0.4;transparent:true"
+                animation="property:material.opacity;from:0.4;to:0.07;direction:alternate;dur:1800;loop:true"
+            ></a-cylinder>
+            <a-cone
+                radius-bottom="0.55"
+                radius-top="0"
+                height="1"
+                position="16.8 2 4"
+                rotation="0 0 -90"
+                material="color:#ff44aa;shader:flat;emissive:#ff44aa;emissiveIntensity:1;opacity:0.85;transparent:true"
+            ></a-cone>
+            <!-- Animated data packets -->
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear" animation__spin="property:rotation;to:0 0 360;loop:true;dur:1000;easing:linear">
+                <a-box
+                    width="0.8"
+                    height="0.8"
+                    depth="0.8"
+                    material="color:#00aaff;wireframe:true;opacity:0.85;transparent:true"
+                ></a-box>
+            </a-entity>
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear;delay:2333" animation__spin="property:rotation;to:0 0 360;loop:true;dur:1100;easing:linear">
+                <a-box
+                    width="0.65"
+                    height="0.65"
+                    depth="0.65"
+                    material="color:#00ffcc;wireframe:true;opacity:0.8;transparent:true"
+                ></a-box>
+            </a-entity>
+            <a-entity animation__move="property:position;from:-18 2 4;to:22 2 4;loop:true;dur:7000;easing:linear;delay:4666" animation__spin="property:rotation;to:360 0 360;loop:true;dur:900;easing:linear">
+                <a-box
+                    width="0.5"
+                    height="0.5"
+                    depth="0.5"
+                    material="color:#ff44aa;wireframe:true;opacity:0.75;transparent:true"
+                ></a-box>
+            </a-entity>
+            <!-- ══════════════════════════════
+       STATION 1 — LOCK
+  ══════════════════════════════ -->
+            <a-entity id="s1" position="-17 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="4.2"
+                    height="0.3"
+                    position="0 -5.3 0"
+                    material="color:#001133;metalness:0.95;roughness:0.1"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="4.2"
+                    height="0.1"
+                    position="0 -5 0"
+                    material="color:#0055ff;shader:flat;opacity:0.45;transparent:true"
+                    animation="property:material.opacity;from:0.45;to:0.08;direction:alternate;dur:1800;loop:true"
+                ></a-cylinder>
+                <!-- Floating chest -->
+                <a-entity animation="property:position;from:0 0 0;to:0 0.6 0;direction:alternate;dur:2500;loop:true;easing:easeInOutSine">
+                    <!-- Chest base -->
+                    <a-box
+                        width="4.5"
+                        height="3.2"
+                        depth="3.5"
+                        position="0 -1.6 0"
+                        material="color:#1a3a6e;metalness:0.92;roughness:0.12;emissive:#001a55;emissiveIntensity:0.5"
+                    ></a-box>
+                    <!-- Chest lid -->
+                    <a-box
+                        width="4.5"
+                        height="1.4"
+                        depth="3.5"
+                        position="0 0.7 0"
+                        material="color:#1e4080;metalness:0.92;roughness:0.12;emissive:#002888;emissiveIntensity:0.5"
+                    ></a-box>
+                    <!-- Seam glow -->
+                    <a-box
+                        width="4.65"
+                        height="0.16"
+                        depth="3.6"
+                        position="0 0.02 0"
+                        material="color:#4488ff;shader:flat;emissive:#4488ff;emissiveIntensity:1"
+                    ></a-box>
+                    <!-- Corner bolts -->
+                    <a-sphere radius="0.14" position=" 2.1  0.7  1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1  0.7  1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1  0.7 -1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1  0.7 -1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1 -1.6  1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1 -1.6  1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1 -1.6 -1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1 -1.6 -1.65" material="color:#6699ff;metalness:0.9"></a-sphere>
+                    <!-- Padlock body -->
+                    <a-box
+                        width="1.1"
+                        height="0.9"
+                        depth="0.55"
+                        position="0 0.32 1.82"
+                        material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:0.8"
+                    ></a-box>
+                    <!-- Padlock shackle -->
+                    <a-torus
+                        radius="0.42"
+                        radius-tubular="0.09"
+                        arc="180"
+                        rotation="0 0 0"
+                        position="0 0.9 1.82"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.7"
+                    ></a-torus>
+                    <!-- Keyhole -->
+                    <a-circle radius="0.12" position="0 0.28 2.1" material="color:#000;shader:flat"></a-circle>
+                    <!-- Glow aura -->
+                    <a-sphere radius="3.5" material="color:#0044ff;opacity:0.04;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.1 1.1 1.1;direction:alternate;dur:1800;loop:true;easing:easeInOutSine"></a-sphere>
+                </a-entity>
+                <!-- Orbit ring -->
+                <a-torus
+                    radius="4"
+                    radius-tubular="0.07"
+                    rotation="80 0 0"
+                    material="color:#0055ff;shader:flat;opacity:0.5;transparent:true"
+                    animation="property:rotation;from:80 0 0;to:80 360 0;loop:true;dur:4200;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="4"
+                    radius-tubular="0.04"
+                    rotation="80 90 0"
+                    material="color:#4488ff;shader:flat;opacity:0.22;transparent:true"
+                    animation="property:rotation;from:80 90 0;to:80 450 0;loop:true;dur:6000;easing:linear"
+                ></a-torus>
+                <!-- Floating key -->
+                <a-entity position="4.5 1.5 2" animation="property:position;from:4.5 1.5 2;to:4.5 2.4 2;direction:alternate;dur:2200;loop:true;easing:easeInOutSine">
+                    <a-torus radius="0.7" radius-tubular="0.2" material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:1"></a-torus>
+                    <a-cylinder
+                        radius="0.12"
+                        height="2"
+                        rotation="0 0 90"
+                        position="1.4 0 0"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-cylinder>
+                    <a-box
+                        width="0.18"
+                        height="0.45"
+                        depth="0.25"
+                        position="2.28 -0.22 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-box
+                        width="0.18"
+                        height="0.33"
+                        depth="0.25"
+                        position="2.6 -0.18 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-text
+                        value="YOUR KEY"
+                        position="-0.1 1.3 0"
+                        color="#ffcc00"
+                        width="8"
+                        align="center"
+                        font="exo2bold"
+                        material="shader:flat;emissive:#997700;emissiveIntensity:1"
+                    ></a-text>
+                </a-entity>
+                <!-- Station label -->
+                <a-text
+                    value="① LOCK"
+                    position="0 5.6 6.5"
+                    align="center"
+                    color="#4488ff"
+                    width="26"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#2255dd;emissiveIntensity:1"
+                ></a-text>
+                <!-- Description -->
+                <a-text
+                    value="Your data goes in sealed.&#10;Only you hold the key."
+                    position="0 -6.2 6.5"
+                    align="center"
+                    color="#aabbff"
+                    width="14"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <!-- /s1 -->
+            <!-- ══════════════════════════════
+       STATION 2 — COMPUTE
+  ══════════════════════════════ -->
+            <a-entity id="s2" position="0 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="5.2"
+                    height="0.35"
+                    position="0 -5.35 0"
+                    material="color:#050c12;metalness:0.97;roughness:0.08"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="5.2"
+                    height="0.12"
+                    position="0 -5 0"
+                    material="color:#00ffcc;shader:flat;opacity:0.45;transparent:true"
+                    animation="property:material.opacity;from:0.45;to:0.07;direction:alternate;dur:1400;loop:true"
+                ></a-cylinder>
+                <!-- Machine shell -->
+                <a-box
+                    width="8"
+                    height="9.5"
+                    depth="5.8"
+                    position="0 0 0"
+                    material="color:#030d14;metalness:0.98;roughness:0.04;emissive:#003322;emissiveIntensity:0.1"
+                ></a-box>
+                <!-- Front panel glass -->
+                <a-box
+                    width="7.6"
+                    height="9.1"
+                    depth="0.1"
+                    position="0 0 2.96"
+                    material="color:#00ffcc;opacity:0.03;transparent:true;shader:flat"
+                ></a-box>
+                <!-- Edge glow strips -->
+                <a-box
+                    width="8.1"
+                    height="0.12"
+                    depth="5.9"
+                    position="0  4.81 0"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <a-box
+                    width="8.1"
+                    height="0.12"
+                    depth="5.9"
+                    position="0 -4.81 0"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <a-box
+                    width="0.12"
+                    height="9.6"
+                    depth="5.9"
+                    position=" 4.06 0 0"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <a-box
+                    width="0.12"
+                    height="9.6"
+                    depth="5.9"
+                    position="-4.06 0 0"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <!-- Corner verticals -->
+                <a-box
+                    width="0.08"
+                    height="9.6"
+                    depth="0.08"
+                    position=" 4.06 0  2.96"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <a-box
+                    width="0.08"
+                    height="9.6"
+                    depth="0.08"
+                    position="-4.06 0  2.96"
+                    material="color:#00ffcc;shader:flat"
+                ></a-box>
+                <!-- IN / OUT slots -->
+                <a-box
+                    width="0.1"
+                    height="1.6"
+                    depth="1.6"
+                    position="-4.06 0 0"
+                    material="color:#0066ff;shader:flat"
+                ></a-box>
+                <a-box
+                    width="0.1"
+                    height="1.6"
+                    depth="1.6"
+                    position=" 4.06 0 0"
+                    material="color:#ff0077;shader:flat"
+                ></a-box>
+                <!-- Gear 1 (main, teal) -->
+                <a-torus
+                    radius="1.8"
+                    radius-tubular="0.28"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.92;roughness:0.08;emissive:#005544;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 0;to:0 0 360;loop:true;dur:2800;easing:linear"
+                ></a-torus>
+                <a-box
+                    width="3.8"
+                    height="0.26"
+                    depth="0.26"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.9;emissive:#005544;emissiveIntensity:0.7"
+                    animation="property:rotation;from:0 0 0;to:0 0 360;loop:true;dur:2800;easing:linear"
+                ></a-box>
+                <a-box
+                    width="0.26"
+                    height="3.8"
+                    depth="0.26"
+                    position="0 1.5 2"
+                    material="color:#00ffcc;metalness:0.9;emissive:#005544;emissiveIntensity:0.7"
+                    animation="property:rotation;from:0 0 45;to:0 0 405;loop:true;dur:2800;easing:linear"
+                ></a-box>
+                <!-- Gear 2 (pink, counter-clockwise) -->
+                <a-torus
+                    radius="1.3"
+                    radius-tubular="0.22"
+                    position="2 -2 2"
+                    material="color:#ff00aa;metalness:0.92;roughness:0.08;emissive:#660033;emissiveIntensity:0.8"
+                    animation="property:rotation;from:0 0 20;to:0 0 -340;loop:true;dur:2200;easing:linear"
+                ></a-torus>
+                <a-box
+                    width="2.8"
+                    height="0.22"
+                    depth="0.22"
+                    position="2 -2 2"
+                    material="color:#ff00aa;metalness:0.9;emissive:#660033;emissiveIntensity:0.7"
+                    animation="property:rotation;from:0 0 20;to:0 0 -340;loop:true;dur:2200;easing:linear"
+                ></a-box>
+                <!-- Gear 3 (amber, left upper) -->
+                <a-torus
+                    radius="1.1"
+                    radius-tubular="0.18"
+                    position="-2.3 1.8 2"
+                    material="color:#ffcc00;metalness:0.92;roughness:0.08;emissive:#885500;emissiveIntensity:0.7"
+                    animation="property:rotation;to:0 0 -360;loop:true;dur:3500;easing:linear"
+                ></a-torus>
+                <!-- Spinning encrypted cube -->
+                <a-box
+                    width="1.3"
+                    height="1.3"
+                    depth="1.3"
+                    position="0 0 2"
+                    material="color:#00ffcc;wireframe:true;opacity:0.7;transparent:true;emissive:#00aa88;emissiveIntensity:1"
+                    animation="property:rotation;to:360 360 360;loop:true;dur:1600;easing:linear"
+                ></a-box>
+                <!-- No-open badge -->
+                <a-circle radius="1.1" position="2.8 3.2 3.08" material="color:#cc0000;shader:flat;opacity:0.9;transparent:true"></a-circle>
+                <a-box
+                    width="1.6"
+                    height="0.22"
+                    depth="0.15"
+                    position="2.8 3.2 3.12"
+                    rotation="0 0 45"
+                    material="color:#ff3333;shader:flat"
+                ></a-box>
+                <a-box
+                    width="1.6"
+                    height="0.22"
+                    depth="0.15"
+                    position="2.8 3.2 3.12"
+                    rotation="0 0 -45"
+                    material="color:#ff3333;shader:flat"
+                ></a-box>
+                <!-- Status readout (front panel) -->
+                <a-text
+                    value="ENCRYPTION: INTACT"
+                    position="-2.2 3 3.05"
+                    color="#00ff44"
+                    width="7"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#00cc33;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="ACCESS: DENIED"
+                    position="-2.2 2.3 3.05"
+                    color="#ff3333"
+                    width="7"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#ff2222;emissiveIntensity:1"
+                ></a-text>
+                <a-text
+                    value="PRIVACY: 100%"
+                    position="-2.2 1.6 3.05"
+                    color="#00ffcc"
+                    width="7"
+                    align="left"
+                    font="monoid"
+                    material="shader:flat;emissive:#00cc99;emissiveIntensity:1"
+                ></a-text>
+                <!-- Outer orbit ring -->
+                <a-torus
+                    radius="6.5"
+                    radius-tubular="0.07"
+                    rotation="90 0 0"
+                    material="color:#00ffcc;shader:flat;opacity:0.2;transparent:true"
+                    animation="property:rotation;from:90 0 0;to:90 360 0;loop:true;dur:5500;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="6.5"
+                    radius-tubular="0.05"
+                    rotation="90 120 0"
+                    material="color:#00ffcc;shader:flat;opacity:0.1;transparent:true"
+                    animation="property:rotation;from:90 120 0;to:90 480 0;loop:true;dur:8000;easing:linear"
+                ></a-torus>
+                <!-- Station label -->
+                <a-text
+                    value="② COMPUTE"
+                    position="0 6.8 7.5"
+                    align="center"
+                    color="#00ffcc"
+                    width="28"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#00cc99;emissiveIntensity:1"
+                ></a-text>
+                <!-- Description -->
+                <a-text
+                    value="Locked box processed.&#10;Never decrypted. Always private."
+                    position="0 -7.2 7.5"
+                    align="center"
+                    color="#aaffee"
+                    width="16"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <!-- /s2 -->
+            <!-- ══════════════════════════════
+       STATION 3 — UNLOCK
+  ══════════════════════════════ -->
+            <a-entity id="s3" position="17 0 4">
+                <!-- Platform -->
+                <a-cylinder
+                    radius="4.2"
+                    height="0.3"
+                    position="0 -5.3 0"
+                    material="color:#130011;metalness:0.95;roughness:0.1"
+                ></a-cylinder>
+                <a-cylinder
+                    radius="4.2"
+                    height="0.1"
+                    position="0 -5 0"
+                    material="color:#ff0077;shader:flat;opacity:0.45;transparent:true"
+                    animation="property:material.opacity;from:0.45;to:0.08;direction:alternate;dur:1800;loop:true"
+                ></a-cylinder>
+                <!-- Result chest (still locked) -->
+                <a-entity animation="property:position;from:0 0 0;to:0 0.6 0;direction:alternate;dur:2300;loop:true;easing:easeInOutSine">
+                    <!-- Chest base -->
+                    <a-box
+                        width="4.5"
+                        height="3.2"
+                        depth="3.5"
+                        position="0 -1.6 0"
+                        material="color:#3a1428;metalness:0.92;roughness:0.12;emissive:#220011;emissiveIntensity:0.5"
+                    ></a-box>
+                    <!-- Chest lid -->
+                    <a-box
+                        width="4.5"
+                        height="1.4"
+                        depth="3.5"
+                        position="0 0.7 0"
+                        material="color:#4a2040;metalness:0.92;roughness:0.12;emissive:#330022;emissiveIntensity:0.5"
+                    ></a-box>
+                    <!-- Seam glow -->
+                    <a-box
+                        width="4.65"
+                        height="0.16"
+                        depth="3.6"
+                        position="0 0.02 0"
+                        material="color:#ff0077;shader:flat;emissive:#ff0077;emissiveIntensity:1"
+                    ></a-box>
+                    <!-- Corner bolts -->
+                    <a-sphere radius="0.14" position=" 2.1  0.7  1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1  0.7  1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1  0.7 -1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1  0.7 -1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1 -1.6  1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1 -1.6  1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position=" 2.1 -1.6 -1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <a-sphere radius="0.14" position="-2.1 -1.6 -1.65" material="color:#ff66aa;metalness:0.9"></a-sphere>
+                    <!-- Padlock body -->
+                    <a-box
+                        width="1.1"
+                        height="0.9"
+                        depth="0.55"
+                        position="0 0.32 1.82"
+                        material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:0.8"
+                    ></a-box>
+                    <!-- Padlock shackle -->
+                    <a-torus
+                        radius="0.42"
+                        radius-tubular="0.09"
+                        arc="180"
+                        rotation="0 0 0"
+                        position="0 0.9 1.82"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.7"
+                    ></a-torus>
+                    <!-- Keyhole -->
+                    <a-circle radius="0.12" position="0 0.28 2.11" material="color:#000;shader:flat"></a-circle>
+                    <!-- Glow aura -->
+                    <a-sphere radius="3.5" material="color:#ff0077;opacity:0.04;transparent:true;shader:flat" animation="property:scale;from:1 1 1;to:1.1 1.1 1.1;direction:alternate;dur:1800;loop:true;easing:easeInOutSine"></a-sphere>
+                </a-entity>
+                <!-- Orbit rings -->
+                <a-torus
+                    radius="4"
+                    radius-tubular="0.07"
+                    rotation="80 0 0"
+                    material="color:#ff0077;shader:flat;opacity:0.5;transparent:true"
+                    animation="property:rotation;from:80 0 0;to:80 -360 0;loop:true;dur:4200;easing:linear"
+                ></a-torus>
+                <a-torus
+                    radius="4"
+                    radius-tubular="0.04"
+                    rotation="80 90 0"
+                    material="color:#ff44aa;shader:flat;opacity:0.22;transparent:true"
+                    animation="property:rotation;from:80 90 0;to:80 450 0;loop:true;dur:6000;easing:linear"
+                ></a-torus>
+                <!-- Animated key approaching lock -->
+                <a-entity animation="property:position;from:-4.8 2.5 2;to:-0.06 0.6 2;direction:alternate;dur:3000;loop:true;easing:easeInOutCubic">
+                    <a-torus radius="0.7" radius-tubular="0.2" material="color:#ffcc00;metalness:0.96;roughness:0.04;emissive:#997700;emissiveIntensity:1"></a-torus>
+                    <a-cylinder
+                        radius="0.12"
+                        height="2"
+                        rotation="0 0 90"
+                        position="1.4 0 0"
+                        material="color:#ffdd44;metalness:0.96;roughness:0.04;emissive:#886600;emissiveIntensity:0.8"
+                    ></a-cylinder>
+                    <a-box
+                        width="0.18"
+                        height="0.45"
+                        depth="0.25"
+                        position="2.28 -0.22 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-box
+                        width="0.18"
+                        height="0.33"
+                        depth="0.25"
+                        position="2.6 -0.18 0"
+                        material="color:#ffcc00;metalness:0.9;roughness:0.1"
+                    ></a-box>
+                    <a-text
+                        value="YOUR KEY"
+                        position="-0.1 1.3 0"
+                        color="#ffcc00"
+                        width="8"
+                        align="center"
+                        font="exo2bold"
+                        material="shader:flat;emissive:#997700;emissiveIntensity:1"
+                    ></a-text>
+                </a-entity>
+                <!-- Station label -->
+                <a-text
+                    value="③ UNLOCK"
+                    position="0 5.6 6.5"
+                    align="center"
+                    color="#ff44aa"
+                    width="26"
+                    font="exo2bold"
+                    material="shader:flat;emissive:#cc0055;emissiveIntensity:1"
+                ></a-text>
+                <!-- Description -->
+                <a-text
+                    value="Result returned sealed.&#10;Only your key reveals it."
+                    position="0 -6.2 6.5"
+                    align="center"
+                    color="#ffaace"
+                    width="14"
+                    font="kelsonsans"
+                ></a-text>
+            </a-entity>
+            <!-- /s3 -->
+            <!-- Global subtitle -->
+            <a-text
+                value='"Privacy + computation — no tradeoff"'
+                position="0 12 8"
+                align="center"
+                color="#aaffee"
+                width="26"
+                font="kelsonsans"
+            ></a-text>
+        </a-scene>
+        <script>
+// Scroll zoom
+const rig = document.getElementById('rig');
+let zoomZ = 30;
+const ZOOM_MIN = 10, ZOOM_MAX = 50;
+window.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoomZ += e.deltaY * 0.04;
+  zoomZ = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomZ));
+  const p = rig.getAttribute('position');
+  rig.setAttribute('position', { x: p.x, y: p.y, z: zoomZ });
+}, { passive: false });
+
+// Phase bar cycling
+const cards = [
+  document.getElementById('pc1'),
+  document.getElementById('pc2'),
+  document.getElementById('pc3'),
+];
+let activePhase = 0;
+function setPhase(i) {
+  cards.forEach((c, idx) => c.classList.toggle('active', idx === i));
+  activePhase = i;
+}
+setInterval(() => setPhase((activePhase + 1) % 3), 4500);
+
+// Tooltip cycling
+const tips = [
+  "FHE computes on encrypted data — the box is never opened",
+  "Traditional: decrypt → compute → re-encrypt  ❌ privacy lost",
+  "FHE: compute directly on ciphertext  ✓ privacy always intact",
+  "Only the data owner can decrypt the result with their private key",
+  "Balance, identity, and transactions stay hidden — but still work",
+];
+let tipIdx = 0;
+const tooltip = document.getElementById('tooltip');
+function showTip() {
+  tooltip.textContent = tips[tipIdx];
+  tooltip.classList.add('show');
+  setTimeout(() => {
+    tooltip.classList.remove('show');
+    setTimeout(() => {
+      tipIdx = (tipIdx + 1) % tips.length;
+      showTip();
+    }, 1000);
+  }, 3800);
+}
+setTimeout(showTip, 2000);
+        </script>
+    </body>
+</html>
